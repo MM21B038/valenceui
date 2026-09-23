@@ -1,0 +1,83 @@
+openapi: 3.1.0
+info:
+  title: Valence API
+  version: 0.1.0
+  description: Placeholder schema — replace with drf-spectacular export from Django.
+servers:
+  - url: http://localhost:8000/api
+paths:
+  /workflows/:
+    get:
+      summary: List workflows
+      operationId: listWorkflows
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkflowGraph'
+  /workflows/{id}/:
+    get:
+      summary: Get workflow
+      operationId: getWorkflow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowGraph'
+    put:
+      summary: Update workflow
+      operationId: updateWorkflow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowGraph'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowGraph'
+components:
+  schemas:
+    WorkflowGraph:
+      type: object
+      required: [id, name, nodes, edges, viewport]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        nodes:
+          type: array
+          items:
+            type: object
+        edges:
+          type: array
+          items:
+            type: object
+        viewport:
+          type: object
+        updatedAt:
+          type: string
+          format: date-time

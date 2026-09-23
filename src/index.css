@@ -1,0 +1,219 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Valence theme — role-based tokens
+ * deep → chrome/panel | mid → inspector/nodes | accent → connectors | sand → on-dark text
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-chrome: var(--chrome);
+  --color-chrome-fg: var(--chrome-fg);
+  --color-chrome-muted: var(--chrome-muted);
+  --color-panel: var(--panel);
+  --color-panel-fg: var(--panel-fg);
+  --color-panel-muted: var(--panel-muted);
+  --color-panel-border: var(--panel-border);
+  --color-panel-inspector: var(--panel-inspector);
+  --color-panel-inspector-fg: var(--panel-inspector-fg);
+  --color-workspace: var(--workspace);
+  --color-workspace-dot: var(--workspace-dot);
+  --color-node: var(--node);
+  --color-node-fg: var(--node-fg);
+  --color-node-header: var(--node-header);
+  --color-node-icon: var(--node-icon);
+  --color-node-icon-fg: var(--node-icon-fg);
+  --color-connector: var(--connector);
+  --color-interactive: var(--interactive);
+  --color-interactive-fg: var(--interactive-fg);
+
+  --color-brand-1: #1b3c53;
+  --color-brand-2: #234c6a;
+  --color-brand-3: #456882;
+  --color-brand-4: #d2c1b6;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--panel);
+  --color-sidebar-foreground: var(--panel-fg);
+  --color-sidebar-primary: var(--node-icon);
+  --color-sidebar-primary-foreground: var(--node-icon-fg);
+  --color-sidebar-accent: var(--panel-inspector);
+  --color-sidebar-accent-foreground: var(--panel-inspector-fg);
+  --color-sidebar-border: var(--panel-border);
+  --color-sidebar-ring: var(--connector);
+}
+
+/* ── Light ───────────────────────────────────────────────── */
+:root {
+  --radius: 0.625rem;
+
+  --chrome: #1b3c53;
+  --chrome-fg: #d2c1b6;
+  --chrome-muted: #d2c1b699;
+
+  --panel: #1b3c53;
+  --panel-fg: #d2c1b6;
+  --panel-muted: #a8b4be;
+  --panel-border: #45688266;
+
+  --panel-inspector: #234c6a;
+  --panel-inspector-fg: #d2c1b6;
+
+  --workspace: #e8e2db;
+  --workspace-dot: #45688238;
+
+  --node: #ffffff;
+  --node-fg: #1b3c53;
+  --node-header: #f0ebe5;
+  --node-icon: #456882;
+  --node-icon-fg: #d2c1b6;
+
+  --connector: #456882;
+  --interactive: #234c6a;
+  --interactive-fg: #d2c1b6;
+
+  --background: #e8e2db;
+  --foreground: #1b3c53;
+  --card: #ffffff;
+  --card-foreground: #1b3c53;
+  --popover: #ffffff;
+  --popover-foreground: #1b3c53;
+  --primary: #234c6a;
+  --primary-foreground: #d2c1b6;
+  --secondary: #d2c1b6;
+  --secondary-foreground: #1b3c53;
+  --muted: #e4ddd6;
+  --muted-foreground: #456882;
+  --accent: #456882;
+  --accent-foreground: #d2c1b6;
+  --destructive: #c44536;
+  --border: #45688240;
+  --input: #45688230;
+  --ring: #456882;
+}
+
+/* ── Dark ────────────────────────────────────────────────── */
+.dark {
+  --chrome: #121f2c;
+  --chrome-fg: #d2c1b6;
+  --chrome-muted: #d2c1b677;
+
+  --panel: #1b3c53;
+  --panel-fg: #d2c1b6;
+  --panel-muted: #9eb4c4;
+  --panel-border: #45688255;
+
+  --panel-inspector: #234c6a;
+  --panel-inspector-fg: #d2c1b6;
+
+  --workspace: #162a3a;
+  --workspace-dot: #45688250;
+
+  --node: #234c6a;
+  --node-fg: #d2c1b6;
+  --node-header: #1b3c53;
+  --node-icon: #456882;
+  --node-icon-fg: #d2c1b6;
+
+  --connector: #6b92ad;
+  --interactive: #456882;
+  --interactive-fg: #d2c1b6;
+
+  --background: #162a3a;
+  --foreground: #d2c1b6;
+  --card: #234c6a;
+  --card-foreground: #d2c1b6;
+  --popover: #234c6a;
+  --popover-foreground: #d2c1b6;
+  --primary: #456882;
+  --primary-foreground: #d2c1b6;
+  --secondary: #1b3c53;
+  --secondary-foreground: #d2c1b6;
+  --muted: #1b3c53;
+  --muted-foreground: #9eb4c4;
+  --accent: #456882;
+  --accent-foreground: #d2c1b6;
+  --destructive: #e07066;
+  --border: #45688255;
+  --input: #45688244;
+  --ring: #d2c1b6;
+}
+
+@layer utilities {
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  .node-shape-hex {
+    clip-path: polygon(8% 0%, 92% 0%, 100% 50%, 92% 100%, 8% 100%, 0% 50%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+}
+
+.react-flow__edge-path {
+  stroke: var(--connector);
+}
+
+.react-flow__controls-button {
+  background: var(--node) !important;
+  border-color: var(--border) !important;
+  color: var(--node-fg) !important;
+  fill: var(--node-fg) !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--node-header) !important;
+}
+
+.react-flow__minimap {
+  background: var(--node) !important;
+}
+
+.react-flow__minimap-mask {
+  fill: var(--workspace) !important;
+  fill-opacity: 0.6 !important;
+}
