@@ -114,6 +114,9 @@
   --border: #45688240;
   --input: #45688230;
   --ring: #456882;
+
+  /* Right inspector: grows with the viewport, stays clear of the canvas edge. */
+  --inspector-panel-width: clamp(22rem, 32vw, 36rem);
 }
 
 /* ── Dark ────────────────────────────────────────────────── */

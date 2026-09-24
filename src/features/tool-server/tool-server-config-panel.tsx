@@ -8,15 +8,12 @@ import {
   useMcpServerConfig,
   useMcpServerConfigs,
 } from '@/lib/api/mcp-server-config'
-import { TOOL_SERVER_PANEL_WIDTH } from '@/lib/layout/inspector-layout'
 import {
   formatTransportLabel,
   type McpServerConfigListItem,
 } from '@/lib/types/mcp-server-config'
 import { useWorkflowStore } from '@/stores/workflow-store'
 import { cn } from '@/lib/utils'
-
-const PANEL_WIDTH = TOOL_SERVER_PANEL_WIDTH
 
 type PanelMode = 'pick' | 'create' | 'edit'
 
@@ -49,10 +46,10 @@ function ConfigCard({
             event.stopPropagation()
             onEdit()
           }}
-          className="flex size-5 items-center justify-center rounded-md border border-border bg-background text-panel-inspector-fg shadow-sm hover:border-connector hover:bg-node-header"
+          className="flex size-7 items-center justify-center rounded-md border border-border bg-background text-panel-inspector-fg shadow-sm hover:border-connector hover:bg-node-header"
           aria-label={`Edit ${config.name}`}
         >
-          <Pencil className="size-2.5" />
+          <Pencil className="size-3.5" />
         </button>
         <button
           type="button"
@@ -61,13 +58,13 @@ function ConfigCard({
             onDelete()
           }}
           disabled={isDeleting}
-          className="flex size-5 items-center justify-center rounded-md border border-border bg-background text-destructive shadow-sm hover:border-destructive hover:bg-destructive hover:text-white disabled:opacity-50"
+          className="flex size-7 items-center justify-center rounded-md border border-border bg-background text-destructive shadow-sm hover:border-destructive hover:bg-destructive hover:text-white disabled:opacity-50"
           aria-label={`Delete ${config.name}`}
         >
           {isDeleting ? (
-            <Loader2 className="size-2.5 animate-spin" />
+            <Loader2 className="size-3.5 animate-spin" />
           ) : (
-            <Trash2 className="size-2.5" />
+            <Trash2 className="size-3.5" />
           )}
         </button>
       </div>
@@ -77,19 +74,19 @@ function ConfigCard({
         onClick={onSelect}
         title={config.name}
         className={cn(
-          'flex size-full flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center transition-all',
+          'flex size-full flex-col items-center justify-center gap-2 rounded-2xl border p-3 text-center transition-all @md/inspector:gap-2.5 @md/inspector:p-4',
           selected
             ? 'border-connector bg-node-header ring-2 ring-connector/25'
             : 'border-panel-border bg-node hover:border-connector/50 hover:shadow-sm',
         )}
       >
-        <div className="flex size-8 items-center justify-center rounded-2xl bg-gradient-to-br from-interactive/90 to-connector text-node-icon-fg shadow-sm">
-          <Server className="size-3.5" />
+        <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-interactive/90 to-connector text-node-icon-fg shadow-sm @md/inspector:size-14">
+          <Server className="size-5 @md/inspector:size-6" />
         </div>
-        <p className="w-full truncate px-0.5 text-[10px] font-semibold leading-tight text-node-fg">
+        <p className="w-full truncate px-1 text-xs font-semibold leading-tight text-node-fg @md/inspector:text-sm">
           {config.name}
         </p>
-        <p className="w-full truncate px-0.5 text-[9px] leading-tight text-panel-muted">
+        <p className="w-full truncate px-1 text-[11px] leading-tight text-panel-muted @md/inspector:text-xs">
           {formatTransportLabel(config.transport)}
         </p>
       </button>
@@ -102,12 +99,12 @@ function AddConfigCard({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-connector/50 bg-node-header/40 p-2 text-panel-muted transition-colors hover:border-connector hover:bg-node-header hover:text-panel-inspector-fg"
+      className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-connector/50 bg-node-header/40 p-3 text-panel-muted transition-colors hover:border-connector hover:bg-node-header hover:text-panel-inspector-fg @md/inspector:gap-2.5 @md/inspector:p-4"
     >
-      <div className="flex size-8 items-center justify-center rounded-xl border border-connector/30 bg-node">
-        <Plus className="size-4 text-connector" />
+      <div className="flex size-11 items-center justify-center rounded-xl border border-connector/30 bg-node @md/inspector:size-14">
+        <Plus className="size-5 text-connector @md/inspector:size-6" />
       </div>
-      <span className="text-[10px] font-medium leading-tight">Add new</span>
+      <span className="text-xs font-medium leading-tight @md/inspector:text-sm">Add new</span>
     </button>
   )
 }
@@ -223,13 +220,11 @@ export function ToolServerConfigPanel() {
       onClose={closeToolServerModal}
       title={panelTitle}
       subtitle={panelSubtitle}
-      width={PANEL_WIDTH}
       bodyClassName="overflow-y-auto"
       showBackdrop={!expandedStackId}
     >
           {mode === 'create' ? (
             <CreateToolServerConfigForm
-              compact
               onSaved={(config) => handleSelect(config)}
               onCancel={() => setMode('pick')}
             />
@@ -240,7 +235,6 @@ export function ToolServerConfigPanel() {
               </div>
             ) : (
               <CreateToolServerConfigForm
-                compact
                 initialConfig={editingConfig}
                 onSaved={(config) => {
                   syncNodesWithConfig(config)
@@ -258,11 +252,11 @@ export function ToolServerConfigPanel() {
               <Loader2 className="size-4 animate-spin" />
             </div>
           ) : isError ? (
-            <p className="px-1 py-2 text-[10px] leading-snug text-destructive">
+            <p className="px-1 py-2 text-xs leading-snug text-destructive @md/inspector:text-sm">
               API unreachable. Is Django running on port 8000?
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3 @md/inspector:gap-4">
               <AddConfigCard onClick={() => setMode('create')} />
               {configs.map((config) => (
                 <ConfigCard
@@ -282,7 +276,7 @@ export function ToolServerConfigPanel() {
           )}
 
       {mode === 'pick' && configs.length === 0 && !isLoading && !isError && (
-        <p className="mt-2 px-1 text-center text-[10px] text-panel-muted">
+        <p className="mt-3 px-1 text-center text-xs text-panel-muted @md/inspector:text-sm">
           Tap + to add your first MCP server.
         </p>
       )}

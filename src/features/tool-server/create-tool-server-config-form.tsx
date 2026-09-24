@@ -267,12 +267,12 @@ export function CreateToolServerConfigForm({
         </p>
       ) : null}
 
-      <div className={cn('flex gap-2', compact ? 'flex-col pt-1' : 'justify-end pt-2')}>
+      <div className={cn('flex gap-2', compact ? 'flex-col pt-1' : 'pt-2')}>
         <Button
           type="button"
           variant="outline"
           size={compact ? 'sm' : 'default'}
-          className={compact ? 'h-7 text-xs' : undefined}
+          className={compact ? 'h-7 text-xs' : 'flex-1'}
           onClick={onCancel}
         >
           Cancel
@@ -283,7 +283,7 @@ export function CreateToolServerConfigForm({
           size={compact ? 'sm' : 'default'}
           className={cn(
             'bg-interactive text-interactive-fg hover:bg-interactive/90',
-            compact && 'h-7 text-xs',
+            compact ? 'h-7 text-xs' : 'flex-1',
           )}
         >
           {isPending

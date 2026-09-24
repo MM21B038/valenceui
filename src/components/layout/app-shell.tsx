@@ -53,6 +53,14 @@ export function AppShell({ children }: AppShellProps) {
             className="border-chrome-fg/25 bg-transparent text-chrome-fg hover:bg-interactive hover:text-interactive-fg"
             asChild
           >
+            <Link to="/prompts">Prompts</Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-chrome-fg/25 bg-transparent text-chrome-fg hover:bg-interactive hover:text-interactive-fg"
+            asChild
+          >
             <Link to="/">Home</Link>
           </Button>
           <Button

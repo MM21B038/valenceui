@@ -100,14 +100,14 @@ export function LlmChat({ nodeId, configId, modelName }: LlmChatProps) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {connectedServerIds.length > 0 ? (
-        <div className="mb-2 flex items-start gap-1.5 rounded-xl border border-panel-border bg-node/80 px-2 py-1.5">
-          <Server className="mt-0.5 size-3 shrink-0 text-connector" />
+        <div className="mb-3 flex items-start gap-2 rounded-xl border border-panel-border bg-node/80 px-3 py-2">
+          <Server className="mt-0.5 size-4 shrink-0 text-connector" />
           <div className="min-w-0">
-            <p className="text-[9px] font-medium text-panel-inspector-fg">
+            <p className="text-xs font-medium text-panel-inspector-fg">
               {connectedServerIds.length} MCP server
               {connectedServerIds.length === 1 ? '' : 's'} linked
             </p>
-            <p className="truncate text-[9px] text-panel-muted">
+            <p className="truncate text-xs text-panel-muted">
               {connectedServerNames.join(', ')}
             </p>
           </div>
@@ -120,16 +120,16 @@ export function LlmChat({ nodeId, configId, modelName }: LlmChatProps) {
       >
         {messages.length === 0 ? (
           <div className="flex h-full min-h-[180px] flex-col items-center justify-center gap-2 px-2 text-center">
-            <p className="text-[11px] font-medium text-panel-inspector-fg">
+            <p className="text-sm font-medium text-panel-inspector-fg">
               Chat with Valence
             </p>
-            <p className="text-[10px] leading-snug text-panel-muted">
+            <p className="text-xs leading-snug text-panel-muted @md/inspector:text-sm">
               {modelName
                 ? `Using ${modelName}. Ask anything to try this model.`
                 : 'Ask anything to try this model.'}
             </p>
             {connectedServerIds.length === 0 ? (
-              <p className="text-[9px] leading-snug text-panel-muted">
+              <p className="text-xs leading-snug text-panel-muted">
                 Connect a Tool Server block to enable MCP tools.
               </p>
             ) : null}
@@ -145,7 +145,7 @@ export function LlmChat({ nodeId, configId, modelName }: LlmChatProps) {
             >
               <div
                 className={cn(
-                  'min-w-0 max-w-[92%] rounded-2xl px-2.5 py-1.5 text-[10px] leading-snug break-words',
+                  'min-w-0 max-w-[92%] rounded-2xl px-3 py-2 text-xs leading-snug break-words @md/inspector:text-sm',
                   message.role === 'user'
                     ? 'rounded-br-md bg-interactive text-interactive-fg whitespace-pre-wrap'
                     : 'w-full rounded-bl-md border border-panel-border bg-node text-node-fg',
@@ -153,7 +153,7 @@ export function LlmChat({ nodeId, configId, modelName }: LlmChatProps) {
               >
                 {message.role === 'assistant' ? (
                   <>
-                    <p className="mb-1 text-[8px] font-semibold uppercase tracking-wider text-connector">
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-connector">
                       Valence
                     </p>
                     <ChatMarkdown content={message.content} />
@@ -168,7 +168,7 @@ export function LlmChat({ nodeId, configId, modelName }: LlmChatProps) {
 
         {chat.isPending ? (
           <div className="flex justify-start">
-            <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-panel-border bg-node px-2.5 py-2 text-[10px] text-panel-muted">
+            <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-panel-border bg-node px-3 py-2.5 text-xs text-panel-muted @md/inspector:text-sm">
               <Loader2 className="size-3 animate-spin" />
               Valence is thinking...
             </div>
@@ -177,7 +177,7 @@ export function LlmChat({ nodeId, configId, modelName }: LlmChatProps) {
       </div>
 
       {error ? (
-        <p className="px-1 pb-1 text-[10px] leading-snug text-destructive">{error}</p>
+        <p className="px-1 pb-1 text-xs leading-snug text-destructive">{error}</p>
       ) : null}
 
       <div className="mt-2 shrink-0 border-t border-panel-border pt-2">
@@ -189,14 +189,14 @@ export function LlmChat({ nodeId, configId, modelName }: LlmChatProps) {
             placeholder="Message Valence..."
             rows={2}
             disabled={chat.isPending}
-            className="scrollbar-hidden min-h-[52px] flex-1 resize-none rounded-xl border border-input bg-background px-2.5 py-2 text-[10px] leading-snug shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:opacity-60 dark:bg-input/30"
+            className="scrollbar-hidden min-h-16 flex-1 resize-none rounded-xl border border-input bg-background px-3 py-2.5 text-sm leading-snug shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:opacity-60 dark:bg-input/30"
           />
           <Button
             type="button"
             size="icon"
             disabled={!input.trim() || chat.isPending}
             onClick={() => void handleSend()}
-            className="size-8 shrink-0 bg-interactive text-interactive-fg hover:bg-interactive/90"
+            className="size-10 shrink-0 bg-interactive text-interactive-fg hover:bg-interactive/90"
             aria-label="Send message"
           >
             {chat.isPending ? (
@@ -206,7 +206,7 @@ export function LlmChat({ nodeId, configId, modelName }: LlmChatProps) {
             )}
           </Button>
         </div>
-        <p className="mt-1 px-0.5 text-[9px] text-panel-muted">
+        <p className="mt-1.5 px-0.5 text-xs text-panel-muted">
           Enter to send · Shift+Enter for new line
         </p>
       </div>

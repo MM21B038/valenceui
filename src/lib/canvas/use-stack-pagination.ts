@@ -13,7 +13,11 @@ export function padStackPageSlots<T>(items: T[]): Array<T | null> {
   return slots
 }
 
-export function useStackPagination(itemCount: number, resetKey?: string | null) {
+export function useStackPagination(
+  itemCount: number,
+  resetKey?: string | null,
+  autoRotate = false,
+) {
   const [page, setPage] = useState(0)
   const pageCount = Math.max(1, Math.ceil(itemCount / STACK_PAGE_SIZE))
 
@@ -29,14 +33,14 @@ export function useStackPagination(itemCount: number, resetKey?: string | null) 
   }, [itemCount, pageCount])
 
   useEffect(() => {
-    if (itemCount <= STACK_PAGE_SIZE) return
+    if (!autoRotate || itemCount <= STACK_PAGE_SIZE) return
 
     const timer = window.setInterval(() => {
       setPage((current) => (current + 1) % pageCount)
     }, STACK_PAGE_INTERVAL_MS)
 
     return () => window.clearInterval(timer)
-  }, [itemCount, pageCount])
+  }, [autoRotate, itemCount, pageCount])
 
   return { page, pageCount, setPage }
 }

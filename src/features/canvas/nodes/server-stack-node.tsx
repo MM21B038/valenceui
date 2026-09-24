@@ -23,7 +23,7 @@ export function ServerStackNode({ id, selected }: NodeProps) {
   const openExpandedStack = useWorkflowStore((state) => state.openExpandedStack)
 
   const servers = useMemo(() => getDumpedToolServers(id, nodes), [id, nodes])
-  const { page, pageCount } = useStackPagination(servers.length)
+  const { page, pageCount } = useStackPagination(servers.length, null, true)
   const pageServers = servers.slice(
     page * STACK_PAGE_SIZE,
     page * STACK_PAGE_SIZE + STACK_PAGE_SIZE,

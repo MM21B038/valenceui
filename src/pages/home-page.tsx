@@ -99,9 +99,7 @@ export function HomePage() {
             </Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <a href="https://reactflow.dev" target="_blank" rel="noreferrer">
-              React Flow docs
-            </a>
+            <Link to="/prompts">Prompt library</Link>
           </Button>
         </div>
       </section>

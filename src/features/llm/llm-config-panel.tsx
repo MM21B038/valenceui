@@ -9,8 +9,6 @@ import { formatProviderLabel, type LlmConfig } from '@/lib/types/llm-config'
 import { useWorkflowStore } from '@/stores/workflow-store'
 import { cn } from '@/lib/utils'
 
-const PANEL_WIDTH = 260
-
 type PanelMode = 'pick' | 'create' | 'edit'
 type PanelTab = 'chat' | 'model'
 
@@ -31,7 +29,7 @@ function PanelTabButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-[10px] font-medium transition-colors',
+        'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition-colors @md/inspector:text-sm',
         active
           ? 'bg-node text-panel-inspector-fg shadow-sm'
           : 'text-panel-muted hover:bg-node/60 hover:text-panel-inspector-fg',
@@ -72,10 +70,10 @@ function ConfigCard({
             event.stopPropagation()
             onEdit()
           }}
-          className="flex size-5 items-center justify-center rounded-md border border-border bg-background text-panel-inspector-fg shadow-sm hover:border-connector hover:bg-node-header"
+          className="flex size-7 items-center justify-center rounded-md border border-border bg-background text-panel-inspector-fg shadow-sm hover:border-connector hover:bg-node-header"
           aria-label={`Edit ${config.model}`}
         >
-          <Pencil className="size-2.5" />
+          <Pencil className="size-3.5" />
         </button>
         <button
           type="button"
@@ -84,13 +82,13 @@ function ConfigCard({
             onDelete()
           }}
           disabled={isDeleting}
-          className="flex size-5 items-center justify-center rounded-md border border-border bg-background text-destructive shadow-sm hover:border-destructive hover:bg-destructive hover:text-white disabled:opacity-50"
+          className="flex size-7 items-center justify-center rounded-md border border-border bg-background text-destructive shadow-sm hover:border-destructive hover:bg-destructive hover:text-white disabled:opacity-50"
           aria-label={`Delete ${config.model}`}
         >
           {isDeleting ? (
-            <Loader2 className="size-2.5 animate-spin" />
+            <Loader2 className="size-3.5 animate-spin" />
           ) : (
-            <Trash2 className="size-2.5" />
+            <Trash2 className="size-3.5" />
           )}
         </button>
       </div>
@@ -100,19 +98,19 @@ function ConfigCard({
         onClick={onSelect}
         title={config.base_url ?? formatProviderLabel(config.provider)}
         className={cn(
-          'flex size-full flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center transition-all',
+          'flex size-full flex-col items-center justify-center gap-2 rounded-2xl border p-3 text-center transition-all @md/inspector:gap-2.5 @md/inspector:p-4',
           selected
             ? 'border-connector bg-node-header ring-2 ring-connector/25'
             : 'border-panel-border bg-node hover:border-connector/50 hover:shadow-sm',
         )}
       >
-        <div className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-connector/90 to-interactive text-node-icon-fg shadow-sm">
-          <BrainCircuit className="size-3.5" />
+        <div className="flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-connector/90 to-interactive text-node-icon-fg shadow-sm @md/inspector:size-14">
+          <BrainCircuit className="size-5 @md/inspector:size-6" />
         </div>
-        <p className="w-full truncate px-0.5 text-[10px] font-semibold leading-tight text-node-fg">
+        <p className="w-full truncate px-1 text-xs font-semibold leading-tight text-node-fg @md/inspector:text-sm">
           {config.model}
         </p>
-        <p className="w-full truncate px-0.5 text-[9px] leading-tight text-panel-muted">
+        <p className="w-full truncate px-1 text-[11px] leading-tight text-panel-muted @md/inspector:text-xs">
           {formatProviderLabel(config.provider)}
         </p>
       </button>
@@ -125,12 +123,12 @@ function AddConfigCard({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-connector/50 bg-node-header/40 p-2 text-panel-muted transition-colors hover:border-connector hover:bg-node-header hover:text-panel-inspector-fg"
+      className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-connector/50 bg-node-header/40 p-3 text-panel-muted transition-colors hover:border-connector hover:bg-node-header hover:text-panel-inspector-fg @md/inspector:gap-2.5 @md/inspector:p-4"
     >
-      <div className="flex size-8 items-center justify-center rounded-xl border border-connector/30 bg-node">
-        <Plus className="size-4 text-connector" />
+      <div className="flex size-11 items-center justify-center rounded-xl border border-connector/30 bg-node @md/inspector:size-14">
+        <Plus className="size-5 text-connector @md/inspector:size-6" />
       </div>
-      <span className="text-[10px] font-medium leading-tight">Add new</span>
+      <span className="text-xs font-medium leading-tight @md/inspector:text-sm">Add new</span>
     </button>
   )
 }
@@ -258,7 +256,6 @@ export function LlmConfigPanel() {
       onClose={closeLlmModal}
       title={panelTitle}
       subtitle={panelSubtitle}
-      width={PANEL_WIDTH}
       bodyClassName={cn(
         tab === 'chat' && hasConfig && mode === 'pick'
           ? 'flex flex-col overflow-hidden'
@@ -268,11 +265,11 @@ export function LlmConfigPanel() {
         showTabs ? (
           <div className="mt-2 flex gap-1 rounded-xl bg-panel-border/30 p-1">
             <PanelTabButton active={tab === 'chat'} onClick={() => setTab('chat')}>
-              <MessageSquare className="size-3" />
+              <MessageSquare className="size-3.5 @md/inspector:size-4" />
               Chat
             </PanelTabButton>
             <PanelTabButton active={tab === 'model'} onClick={() => setTab('model')}>
-              <Settings2 className="size-3" />
+              <Settings2 className="size-3.5 @md/inspector:size-4" />
               Model
             </PanelTabButton>
           </div>
@@ -287,13 +284,11 @@ export function LlmConfigPanel() {
             />
           ) : mode === 'create' ? (
             <CreateLlmConfigForm
-              compact
               onSaved={(config) => handleSelect(config)}
               onCancel={() => setMode('pick')}
             />
           ) : mode === 'edit' && editingConfig ? (
             <CreateLlmConfigForm
-              compact
               initialConfig={editingConfig}
               onSaved={(config) => {
                 syncNodesWithConfig(config)
@@ -311,11 +306,11 @@ export function LlmConfigPanel() {
               <Loader2 className="size-4 animate-spin" />
             </div>
           ) : isError ? (
-            <p className="px-1 py-2 text-[10px] leading-snug text-destructive">
+            <p className="px-1 py-2 text-xs leading-snug text-destructive @md/inspector:text-sm">
               API unreachable. Is Django running on port 8000?
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3 @md/inspector:gap-4">
               <AddConfigCard onClick={() => setMode('create')} />
               {configs.map((config) => (
                 <ConfigCard
@@ -335,7 +330,7 @@ export function LlmConfigPanel() {
           )}
 
       {mode === 'pick' && tab === 'model' && configs.length === 0 && !isLoading && !isError && (
-        <p className="mt-2 px-1 text-center text-[10px] text-panel-muted">
+        <p className="mt-3 px-1 text-center text-xs text-panel-muted @md/inspector:text-sm">
           Tap + to add your first model.
         </p>
       )}
