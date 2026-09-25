@@ -1,9 +1,17 @@
 import { type NodeProps } from '@xyflow/react'
 import { Server } from 'lucide-react'
 
+import { usePaintMode } from '@/components/theme/paint-mode-provider'
+import { useTheme } from '@/components/theme/theme-provider'
 import { NodeHoverActions } from '@/features/canvas/nodes/node-hover-actions'
 import { NodePorts } from '@/features/canvas/nodes/node-ports'
 import { formatTransportLabel, type ToolServerNodeData } from '@/lib/types/mcp-server-config'
+import {
+  componentHexRingStyle,
+  componentIconGradientStyle,
+  componentSurfaceStyle,
+  componentVar,
+} from '@/lib/theme/component-block-styles'
 import { useWorkflowStore } from '@/stores/workflow-store'
 import { cn } from '@/lib/utils'
 
@@ -13,9 +21,16 @@ export function ToolServerNode({ id, data, selected }: NodeProps) {
   const duplicateNode = useWorkflowStore((state) => state.duplicateNode)
   const removeNode = useWorkflowStore((state) => state.removeNode)
 
+  const { componentGradients } = useTheme()
+  const { isPaintMode, hoverTarget, applyToComponent } = usePaintMode()
+  const hasPaint = Boolean(componentGradients.toolServer)
   const hasConfig = Boolean(nodeData.configId && nodeData.name)
 
   const handleOpenConfig = () => {
+    if (isPaintMode) {
+      applyToComponent('toolServer')
+      return
+    }
     openToolServerModal(id)
   }
 
@@ -43,6 +58,7 @@ export function ToolServerNode({ id, data, selected }: NodeProps) {
       <div
         role="button"
         tabIndex={0}
+        data-paint-target="toolServer"
         onClick={handleOpenConfig}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
@@ -50,46 +66,60 @@ export function ToolServerNode({ id, data, selected }: NodeProps) {
             handleOpenConfig()
           }
         }}
-        className="relative z-10 flex size-full cursor-pointer flex-col items-center justify-center gap-1.5 p-2 text-center transition-all duration-150"
+        className={cn(
+          'paint-mode-target relative z-10 flex size-full flex-col items-center justify-center gap-1.5 p-2 text-center transition-all duration-150',
+          isPaintMode && 'paint-mode-armed',
+          hoverTarget === 'toolServer' && 'paint-drop-target',
+        )}
       >
         <div
-          className={cn(
-            'absolute inset-0 node-shape-hex transition-all duration-150',
-            selected ? 'bg-connector/70' : 'bg-connector/25',
-          )}
+          className="absolute inset-0 node-shape-hex transition-all duration-150"
+          style={componentHexRingStyle('toolServer', { selected, hasPaint })}
           aria-hidden
         />
         <div
-          className={cn(
-            'absolute inset-[2px] node-shape-hex bg-node shadow-md transition-all duration-150',
-            selected &&
-              'shadow-[0_0_0_3px_color-mix(in_oklch,var(--connector)_28%,transparent),0_8px_20px_color-mix(in_oklch,var(--connector)_16%,transparent)]',
-          )}
+          className="absolute inset-[2.5px] node-shape-hex shadow-md transition-all duration-150"
+          style={componentSurfaceStyle('toolServer')}
           aria-hidden
         />
 
         <div className="relative z-10 flex flex-col items-center gap-1.5">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-gradient-to-br from-interactive/90 to-connector text-node-icon-fg shadow-sm">
+          <div
+            className="flex size-10 items-center justify-center rounded-lg shadow-sm"
+            style={componentIconGradientStyle('toolServer')}
+          >
             <Server className="size-[18px]" />
           </div>
 
           <div className="w-full min-w-0 px-3">
             {hasConfig ? (
               <>
-                <p className="truncate text-[11px] font-semibold leading-tight text-node-fg">
+                <p
+                  className="truncate text-[11px] font-semibold leading-tight"
+                  style={{ color: componentVar('toolServer', 'foreground') }}
+                >
                   {nodeData.name}
                 </p>
-                <p className="mt-0.5 truncate text-[9px] text-muted-foreground">
+                <p
+                  className="mt-0.5 truncate text-[9px]"
+                  style={{ color: componentVar('toolServer', 'muted') }}
+                >
                   {formatTransportLabel(nodeData.transport ?? '')}
                 </p>
               </>
             ) : (
               <>
-                <p className="truncate text-[9px] font-bold uppercase tracking-widest text-connector">
+                <p
+                  className="truncate text-[9px] font-bold uppercase tracking-widest"
+                  style={{ color: componentVar('toolServer', 'label') }}
+                >
                   Tool Server
                 </p>
-                <p className="mt-0.5 text-[8px] leading-tight text-muted-foreground">
-                  Tap to configure
+                <p
+                  className="mt-0.5 text-[8px] leading-tight"
+                  style={{ color: componentVar('toolServer', 'muted') }}
+                >
+                  {isPaintMode ? 'Drop to paint' : 'Tap to configure'}
                 </p>
               </>
             )}

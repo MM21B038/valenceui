@@ -1,9 +1,11 @@
 import { ArrowRight, Workflow } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { useTheme } from '@/components/theme/theme-provider'
+import { ThemePalettePicker } from '@/components/theme/theme-palette-picker'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { Button } from '@/components/ui/button'
-import { brand, colorRoles } from '@/lib/theme/brand'
+import { colorRoles, resolvePalette } from '@/lib/theme/brand'
 
 const rolePreview = [
   { label: 'Header', className: 'bg-chrome text-chrome-fg' },
@@ -13,6 +15,9 @@ const rolePreview = [
 ] as const
 
 export function HomePage() {
+  const theme = useTheme()
+  const activePalette = resolvePalette(theme)
+
   return (
     <div className="flex min-h-full flex-col bg-background">
       <header className="flex items-center justify-between border-b border-panel-border bg-chrome px-6 py-4 text-chrome-fg">
@@ -26,6 +31,7 @@ export function HomePage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <ThemePalettePicker />
           <ThemeToggle />
           <Button
             className="bg-interactive text-interactive-fg hover:bg-interactive/90"
@@ -40,10 +46,10 @@ export function HomePage() {
         <div className="mb-8 grid gap-6 md:grid-cols-2">
           <div>
             <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Brand colors
+              {activePalette.name} colors
             </p>
             <div className="flex gap-2">
-              {Object.entries(brand).map(([name, hex]) => (
+              {Object.entries(activePalette.colors).map(([name, hex]) => (
                 <div key={name} className="flex flex-col items-center gap-1">
                   <div
                     className="size-10 rounded-lg border border-border shadow-sm"

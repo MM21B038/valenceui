@@ -1,9 +1,19 @@
 import { type NodeProps } from '@xyflow/react'
 import { BrainCircuit } from 'lucide-react'
 
+import { usePaintMode } from '@/components/theme/paint-mode-provider'
+import { useTheme } from '@/components/theme/theme-provider'
 import { NodeHoverActions } from '@/features/canvas/nodes/node-hover-actions'
 import { NodePorts } from '@/features/canvas/nodes/node-ports'
 import type { LlmNodeData } from '@/lib/types/llm-config'
+import {
+  componentBorderMutedStyle,
+  componentPaintBorderStyle,
+  componentIconGradientStyle,
+  componentSelectedRingStyle,
+  componentSurfaceStyle,
+  componentVar,
+} from '@/lib/theme/component-block-styles'
 import { useWorkflowStore } from '@/stores/workflow-store'
 import { cn } from '@/lib/utils'
 
@@ -13,9 +23,16 @@ export function LlmNode({ id, data, selected }: NodeProps) {
   const duplicateNode = useWorkflowStore((state) => state.duplicateNode)
   const removeNode = useWorkflowStore((state) => state.removeNode)
 
+  const { componentGradients } = useTheme()
+  const { isPaintMode, hoverTarget, applyToComponent } = usePaintMode()
+  const hasPaint = Boolean(componentGradients.llm)
   const hasConfig = Boolean(nodeData.configId && nodeData.model)
 
   const handleOpenConfig = () => {
+    if (isPaintMode) {
+      applyToComponent('llm')
+      return
+    }
     openLlmModal(id)
   }
 
@@ -43,6 +60,7 @@ export function LlmNode({ id, data, selected }: NodeProps) {
       <div
         role="button"
         tabIndex={0}
+        data-paint-target="llm"
         onClick={handleOpenConfig}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
@@ -50,34 +68,58 @@ export function LlmNode({ id, data, selected }: NodeProps) {
             handleOpenConfig()
           }
         }}
+        style={{
+          ...componentSurfaceStyle('llm'),
+          ...(selected
+            ? componentSelectedRingStyle('llm')
+            : hasPaint
+              ? componentPaintBorderStyle('llm')
+              : componentBorderMutedStyle('llm')),
+        }}
         className={cn(
-          'relative z-10 flex size-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-full border-2 bg-node p-2.5 text-center shadow-md transition-all duration-150',
-          selected
-            ? 'border-connector shadow-[0_0_0_4px_color-mix(in_oklch,var(--connector)_22%,transparent),0_8px_24px_color-mix(in_oklch,var(--connector)_18%,transparent)]'
-            : 'border-connector/30 hover:border-connector/60',
+          'paint-mode-target relative z-10 flex size-full flex-col items-center justify-center gap-1.5 rounded-full p-2.5 text-center shadow-md transition-all duration-150',
+          !hasPaint && !selected && 'border-2',
+          !selected && 'hover:opacity-95',
+          isPaintMode && 'paint-mode-armed',
+          hoverTarget === 'llm' && 'paint-drop-target',
         )}
       >
-        <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-connector/90 to-interactive text-node-icon-fg shadow-sm">
+        <div
+          className="flex size-10 items-center justify-center rounded-full shadow-sm"
+          style={componentIconGradientStyle('llm')}
+        >
           <BrainCircuit className="size-[18px]" />
         </div>
 
         <div className="w-full min-w-0 px-2">
           {hasConfig ? (
             <>
-              <p className="truncate text-[11px] font-semibold leading-tight text-node-fg">
+              <p
+                className="truncate text-[11px] font-semibold leading-tight"
+                style={{ color: componentVar('llm', 'foreground') }}
+              >
                 {nodeData.model}
               </p>
-              <p className="mt-0.5 truncate text-[9px] text-muted-foreground">
+              <p
+                className="mt-0.5 truncate text-[9px]"
+                style={{ color: componentVar('llm', 'muted') }}
+              >
                 {nodeData.provider}
               </p>
             </>
           ) : (
             <>
-              <p className="truncate text-[9px] font-bold uppercase tracking-widest text-connector">
+              <p
+                className="truncate text-[9px] font-bold uppercase tracking-widest"
+                style={{ color: componentVar('llm', 'label') }}
+              >
                 LLM
               </p>
-              <p className="mt-0.5 text-[8px] leading-tight text-muted-foreground">
-                Tap to configure
+              <p
+                className="mt-0.5 text-[8px] leading-tight"
+                style={{ color: componentVar('llm', 'muted') }}
+              >
+                {isPaintMode ? 'Drop to paint' : 'Tap to configure'}
               </p>
             </>
           )}

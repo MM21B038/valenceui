@@ -1,6 +1,7 @@
 import { useDraggable } from '@dnd-kit/core'
 import { useRef, useState } from 'react'
 
+import { useTheme } from '@/components/theme/theme-provider'
 import {
   PALETTE_COMPONENTS,
   type PaletteComponent,
@@ -9,6 +10,13 @@ import {
   getRailItemScale,
   useRailMagnification,
 } from '@/features/palette/use-rail-magnification'
+import {
+  componentBorderMutedStyle,
+  componentPaintBorderStyle,
+  componentIconGradientStyle,
+  componentSurfaceHoverStyle,
+  componentSurfaceStyle,
+} from '@/lib/theme/component-block-styles'
 import { cn } from '@/lib/utils'
 
 const RAIL_ITEM_HEIGHT = 56
@@ -30,6 +38,8 @@ function RailItem({
   onHover: (id: string | null) => void
 }) {
   const Icon = component.icon
+  const { componentGradients } = useTheme()
+  const hasPaint = Boolean(componentGradients[component.type])
   const centerY =
     RAIL_PADDING_TOP + index * RAIL_ITEM_HEIGHT + RAIL_ITEM_HEIGHT / 2 - scrollTop
   const scale = getRailItemScale(centerY, pointerY)
@@ -39,35 +49,44 @@ function RailItem({
     data: { type: component.type },
   })
 
+  const isActive = isHovered && !isDragging
+
   return (
-    <div className="relative flex h-14 items-center justify-center">
+    <div className="group/rail-item relative flex h-14 items-center justify-center">
       <button
         ref={setNodeRef}
         type="button"
-        style={{ transform: `scale(${isDragging ? 1 : scale})` }}
+        style={{
+          transform: `scale(${isDragging ? 1 : scale})`,
+          ...(isActive ? componentSurfaceHoverStyle(component.type) : componentSurfaceStyle(component.type)),
+          ...(isActive || hasPaint
+            ? componentPaintBorderStyle(component.type)
+            : componentBorderMutedStyle(component.type)),
+        }}
         className={cn(
-          'relative flex size-12 touch-none items-center justify-center rounded-2xl border border-panel-border bg-node shadow-sm transition-[transform,opacity,box-shadow,border-color] duration-200 ease-out',
-          'hover:border-connector hover:bg-node-header hover:shadow-md',
+          'relative flex size-12 touch-none items-center justify-center rounded-2xl shadow-sm transition-[transform,opacity,box-shadow,border-color,background-color] duration-200 ease-out',
+          !hasPaint && 'border',
+          'hover:shadow-md',
           'active:cursor-grabbing',
           isDragging ? 'cursor-grabbing opacity-40' : 'cursor-grab',
-          isHovered && !isDragging && 'border-connector bg-node-header',
         )}
         onPointerEnter={() => onHover(component.type)}
         onPointerLeave={() => onHover(null)}
         {...listeners}
         {...attributes}
       >
-        <div className="flex size-9 items-center justify-center rounded-xl bg-node-icon">
-          <Icon className="size-4 text-node-icon-fg" />
+        <div
+          className="flex size-9 items-center justify-center rounded-xl"
+          style={componentIconGradientStyle(component.type)}
+        >
+          <Icon className="size-4" />
         </div>
       </button>
 
       <div
         className={cn(
           'pointer-events-none absolute left-[calc(100%+12px)] z-30 whitespace-nowrap rounded-lg border border-border bg-popover px-2.5 py-1 text-xs font-medium text-popover-foreground shadow-md transition-all duration-200',
-          isHovered && !isDragging
-            ? 'translate-x-0 opacity-100'
-            : '-translate-x-1 opacity-0',
+          isActive ? 'translate-x-0 opacity-100' : '-translate-x-1 opacity-0',
         )}
       >
         {component.label}
@@ -95,7 +114,7 @@ export function ComponentRail() {
 
   return (
     <aside
-      className="pointer-events-auto absolute top-3 bottom-3 left-3 z-20 flex w-[68px] flex-col overflow-hidden rounded-2xl border border-panel-border bg-panel/95 shadow-lg backdrop-blur-sm"
+      className="pointer-events-auto absolute top-3 bottom-3 left-3 z-20 flex w-[68px] flex-col rounded-2xl border border-panel-border bg-panel/95 shadow-lg backdrop-blur-sm"
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
     >

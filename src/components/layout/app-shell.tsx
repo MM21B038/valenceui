@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 
+import { ThemePalettePicker } from '@/components/theme/theme-palette-picker'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -46,6 +47,7 @@ export function AppShell({ children }: AppShellProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          <ThemePalettePicker />
           <ThemeToggle />
           <Button
             variant="outline"

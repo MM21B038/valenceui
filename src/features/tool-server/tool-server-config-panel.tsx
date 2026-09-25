@@ -2,6 +2,7 @@ import { Loader2, Pencil, Plus, Server, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { InspectorPanel } from '@/components/layout/inspector-panel'
+import { useTheme } from '@/components/theme/theme-provider'
 import { CreateToolServerConfigForm } from '@/features/tool-server/create-tool-server-config-form'
 import {
   useDeleteMcpServerConfig,
@@ -13,6 +14,14 @@ import {
   type McpServerConfigListItem,
 } from '@/lib/types/mcp-server-config'
 import { useWorkflowStore } from '@/stores/workflow-store'
+import {
+  componentBorderMutedStyle,
+  componentPaintBorderStyle,
+  componentIconGradientStyle,
+  componentSurfaceHoverStyle,
+  componentSurfaceStyle,
+  componentVar,
+} from '@/lib/theme/component-block-styles'
 import { cn } from '@/lib/utils'
 
 type PanelMode = 'pick' | 'create' | 'edit'
@@ -32,6 +41,9 @@ function ConfigCard({
   onEdit: () => void
   onDelete: () => void
 }) {
+  const { componentGradients } = useTheme()
+  const hasPaint = Boolean(componentGradients.toolServer)
+
   return (
     <div className="group/card relative aspect-square w-full">
       <div
@@ -74,19 +86,39 @@ function ConfigCard({
         onClick={onSelect}
         title={config.name}
         className={cn(
-          'flex size-full flex-col items-center justify-center gap-2 rounded-2xl border p-3 text-center transition-all @md/inspector:gap-2.5 @md/inspector:p-4',
-          selected
-            ? 'border-connector bg-node-header ring-2 ring-connector/25'
-            : 'border-panel-border bg-node hover:border-connector/50 hover:shadow-sm',
+          'flex size-full flex-col items-center justify-center gap-2 rounded-2xl p-3 text-center transition-all hover:shadow-sm @md/inspector:gap-2.5 @md/inspector:p-4',
+          !hasPaint && 'border',
         )}
+        style={{
+          ...(selected
+            ? componentSurfaceHoverStyle('toolServer')
+            : componentSurfaceStyle('toolServer')),
+          ...(selected || hasPaint
+            ? componentPaintBorderStyle('toolServer')
+            : componentBorderMutedStyle('toolServer')),
+          ...(selected
+            ? {
+                boxShadow: `0 0 0 2px color-mix(in oklch, ${componentVar('toolServer', 'ring')} 100%, transparent)`,
+              }
+            : {}),
+        }}
       >
-        <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-interactive/90 to-connector text-node-icon-fg shadow-sm @md/inspector:size-14">
+        <div
+          className="flex size-11 items-center justify-center rounded-2xl shadow-sm @md/inspector:size-14"
+          style={componentIconGradientStyle('toolServer')}
+        >
           <Server className="size-5 @md/inspector:size-6" />
         </div>
-        <p className="w-full truncate px-1 text-xs font-semibold leading-tight text-node-fg @md/inspector:text-sm">
+        <p
+          className="w-full truncate px-1 text-xs font-semibold leading-tight @md/inspector:text-sm"
+          style={{ color: componentVar('toolServer', 'foreground') }}
+        >
           {config.name}
         </p>
-        <p className="w-full truncate px-1 text-[11px] leading-tight text-panel-muted @md/inspector:text-xs">
+        <p
+          className="w-full truncate px-1 text-[11px] leading-tight @md/inspector:text-xs"
+          style={{ color: componentVar('toolServer', 'muted') }}
+        >
           {formatTransportLabel(config.transport)}
         </p>
       </button>
@@ -99,10 +131,25 @@ function AddConfigCard({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-connector/50 bg-node-header/40 p-3 text-panel-muted transition-colors hover:border-connector hover:bg-node-header hover:text-panel-inspector-fg @md/inspector:gap-2.5 @md/inspector:p-4"
+      className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-3 transition-colors @md/inspector:gap-2.5 @md/inspector:p-4"
+      style={{
+        ...componentSurfaceHoverStyle('toolServer'),
+        ...componentBorderMutedStyle('toolServer'),
+        color: componentVar('toolServer', 'muted'),
+        opacity: 0.8,
+      }}
     >
-      <div className="flex size-11 items-center justify-center rounded-xl border border-connector/30 bg-node @md/inspector:size-14">
-        <Plus className="size-5 text-connector @md/inspector:size-6" />
+      <div
+        className="flex size-11 items-center justify-center rounded-xl border @md/inspector:size-14"
+        style={{
+          ...componentSurfaceStyle('toolServer'),
+          ...componentBorderMutedStyle('toolServer'),
+        }}
+      >
+        <Plus
+          className="size-5 @md/inspector:size-6"
+          style={{ color: componentVar('toolServer', 'label') }}
+        />
       </div>
       <span className="text-xs font-medium leading-tight @md/inspector:text-sm">Add new</span>
     </button>

@@ -7,9 +7,48 @@
     <title>Valence</title>
     <script>
       (function () {
-        var mode = localStorage.getItem('valence-theme')
-        if (mode === 'dark' || !mode) document.documentElement.classList.add('dark')
-        if (mode) document.documentElement.dataset.theme = mode
+        var stored = localStorage.getItem('valence-theme')
+        var mode = 'dark'
+        var palette = 'default'
+
+        if (stored === 'light' || stored === 'dark') {
+          mode = stored
+        } else if (stored) {
+          try {
+            var parsed = JSON.parse(stored)
+            if (parsed.mode === 'light' || parsed.mode === 'dark') mode = parsed.mode
+            if (
+              parsed.palette === 'default' ||
+              parsed.palette === 'dune' ||
+              parsed.palette === 'nocturne' ||
+              parsed.palette === 'custom'
+            ) {
+              palette = parsed.palette === 'nocturne' ? 'dune' : parsed.palette
+            }
+          } catch (e) {}
+        }
+
+        if (mode === 'dark') document.documentElement.classList.add('dark')
+        document.documentElement.dataset.theme = mode
+        if (palette !== 'default') document.documentElement.dataset.palette = palette
+
+        if (palette === 'custom') {
+          var customCss = localStorage.getItem('valence-custom-theme-css')
+          if (customCss) {
+            var style = document.createElement('style')
+            style.id = 'valence-custom-theme'
+            style.textContent = customCss
+            document.head.appendChild(style)
+          }
+        }
+
+        var componentCss = localStorage.getItem('valence-component-theme-css')
+        if (componentCss) {
+          var componentStyle = document.createElement('style')
+          componentStyle.id = 'valence-component-theme'
+          componentStyle.textContent = componentCss
+          document.head.appendChild(componentStyle)
+        }
       })()
     </script>
   </head>

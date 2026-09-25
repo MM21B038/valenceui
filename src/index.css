@@ -34,10 +34,10 @@
   --color-interactive: var(--interactive);
   --color-interactive-fg: var(--interactive-fg);
 
-  --color-brand-1: #1b3c53;
-  --color-brand-2: #234c6a;
-  --color-brand-3: #456882;
-  --color-brand-4: #d2c1b6;
+  --color-brand-1: var(--brand-1);
+  --color-brand-2: var(--brand-2);
+  --color-brand-3: var(--brand-3);
+  --color-brand-4: var(--brand-4);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -67,9 +67,14 @@
   --color-sidebar-ring: var(--connector);
 }
 
-/* ── Light ───────────────────────────────────────────────── */
+/* ── Valence (default) — Light ───────────────────────────── */
 :root {
   --radius: 0.625rem;
+
+  --brand-1: #1b3c53;
+  --brand-2: #234c6a;
+  --brand-3: #456882;
+  --brand-4: #d2c1b6;
 
   --chrome: #1b3c53;
   --chrome-fg: #d2c1b6;
@@ -119,7 +124,7 @@
   --inspector-panel-width: clamp(22rem, 32vw, 36rem);
 }
 
-/* ── Dark ────────────────────────────────────────────────── */
+/* ── Valence (default) — Dark ────────────────────────────── */
 .dark {
   --chrome: #121f2c;
   --chrome-fg: #d2c1b6;
@@ -164,6 +169,105 @@
   --border: #45688255;
   --input: #45688244;
   --ring: #d2c1b6;
+}
+
+/* ── Dune — Light ────────────────────────────────────────── */
+[data-palette='dune'] {
+  --brand-1: #202121;
+  --brand-2: #3d4242;
+  --brand-3: #8a8d8d;
+  --brand-4: #b5af99;
+
+  --chrome: #202121;
+  --chrome-fg: #b5af99;
+  --chrome-muted: #b5af9999;
+
+  --panel: #202121;
+  --panel-fg: #b5af99;
+  --panel-muted: #9a9584;
+  --panel-border: #8a8d8d66;
+
+  --panel-inspector: #3d4242;
+  --panel-inspector-fg: #b5af99;
+
+  --workspace: #ebe6d8;
+  --workspace-dot: #8a8d8d38;
+
+  --node: #ffffff;
+  --node-fg: #202121;
+  --node-header: #f2eee4;
+  --node-icon: #3d4242;
+  --node-icon-fg: #b5af99;
+
+  --connector: #8a8d8d;
+  --interactive: #3d4242;
+  --interactive-fg: #b5af99;
+
+  --background: #ebe6d8;
+  --foreground: #202121;
+  --card: #ffffff;
+  --card-foreground: #202121;
+  --popover: #ffffff;
+  --popover-foreground: #202121;
+  --primary: #3d4242;
+  --primary-foreground: #b5af99;
+  --secondary: #b5af99;
+  --secondary-foreground: #202121;
+  --muted: #e4dfd0;
+  --muted-foreground: #3d4242;
+  --accent: #8a8d8d;
+  --accent-foreground: #202121;
+  --destructive: #c44536;
+  --border: #8a8d8d40;
+  --input: #8a8d8d30;
+  --ring: #8a8d8d;
+}
+
+/* ── Dune — Dark ─────────────────────────────────────────── */
+[data-palette='dune'].dark {
+  --chrome: #141515;
+  --chrome-fg: #b5af99;
+  --chrome-muted: #b5af9977;
+
+  --panel: #202121;
+  --panel-fg: #b5af99;
+  --panel-muted: #9a9584;
+  --panel-border: #8a8d8d55;
+
+  --panel-inspector: #3d4242;
+  --panel-inspector-fg: #b5af99;
+
+  --workspace: #181919;
+  --workspace-dot: #8a8d8d50;
+
+  --node: #3d4242;
+  --node-fg: #b5af99;
+  --node-header: #202121;
+  --node-icon: #8a8d8d;
+  --node-icon-fg: #202121;
+
+  --connector: #a8aba8;
+  --interactive: #8a8d8d;
+  --interactive-fg: #202121;
+
+  --background: #181919;
+  --foreground: #b5af99;
+  --card: #3d4242;
+  --card-foreground: #b5af99;
+  --popover: #3d4242;
+  --popover-foreground: #b5af99;
+  --primary: #8a8d8d;
+  --primary-foreground: #202121;
+  --secondary: #202121;
+  --secondary-foreground: #b5af99;
+  --muted: #202121;
+  --muted-foreground: #9a9584;
+  --accent: #8a8d8d;
+  --accent-foreground: #202121;
+  --destructive: #e07066;
+  --border: #8a8d8d55;
+  --input: #8a8d8d44;
+  --ring: #b5af99;
 }
 
 @layer utilities {
@@ -219,4 +323,64 @@
 .react-flow__minimap-mask {
   fill: var(--workspace) !important;
   fill-opacity: 0.6 !important;
+}
+
+/* ── Paint mode ──────────────────────────────────────────── */
+.paint-mode-active .react-flow__pane {
+  cursor: none !important;
+}
+
+.paint-mode-active .paint-mode-target {
+  cursor: none !important;
+}
+
+.paint-mode-active .paint-mode-armed {
+  animation: paint-target-pulse 1.2s ease-in-out infinite;
+}
+
+.paint-mode-active [data-paint-target]:hover {
+  outline: none;
+}
+
+.paint-mode-active [data-paint-target='llm']:hover {
+  outline: 2px dashed color-mix(in oklch, var(--connector) 55%, transparent);
+  outline-offset: 4px;
+}
+
+.paint-mode-active [data-paint-target='toolServer']:hover .node-shape-hex:first-child {
+  filter: drop-shadow(0 0 8px color-mix(in oklch, var(--connector) 55%, transparent));
+}
+
+@keyframes paint-target-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 color-mix(in oklch, var(--connector) 0%, transparent));
+  }
+  50% {
+    filter: drop-shadow(0 0 14px color-mix(in oklch, var(--connector) 50%, transparent));
+  }
+}
+
+@keyframes brush-wiggle {
+  0%,
+  100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+}
+
+.paint-mode-active [data-paint-target].paint-drop-target {
+  outline: none;
+  transform: scale(1.04);
+}
+
+.paint-mode-active [data-paint-target='llm'].paint-drop-target {
+  outline: 3px solid color-mix(in oklch, var(--connector) 70%, transparent);
+  outline-offset: 5px;
+}
+
+.paint-mode-active [data-paint-target='toolServer'].paint-drop-target .node-shape-hex:first-child {
+  filter: drop-shadow(0 0 10px color-mix(in oklch, var(--connector) 70%, transparent));
 }

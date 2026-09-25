@@ -2,11 +2,20 @@ import { BrainCircuit, Loader2, MessageSquare, Pencil, Plus, Settings2, Trash2 }
 import { useEffect, useState } from 'react'
 
 import { InspectorPanel } from '@/components/layout/inspector-panel'
+import { useTheme } from '@/components/theme/theme-provider'
 import { CreateLlmConfigForm } from '@/features/llm/create-llm-config-form'
 import { LlmChat } from '@/features/llm/llm-chat'
 import { useDeleteLlmConfig, useLlmConfigs } from '@/lib/api/llm-config'
 import { formatProviderLabel, type LlmConfig } from '@/lib/types/llm-config'
 import { useWorkflowStore } from '@/stores/workflow-store'
+import {
+  componentBorderMutedStyle,
+  componentPaintBorderStyle,
+  componentIconGradientStyle,
+  componentSurfaceHoverStyle,
+  componentSurfaceStyle,
+  componentVar,
+} from '@/lib/theme/component-block-styles'
 import { cn } from '@/lib/utils'
 
 type PanelMode = 'pick' | 'create' | 'edit'
@@ -56,6 +65,9 @@ function ConfigCard({
   onEdit: () => void
   onDelete: () => void
 }) {
+  const { componentGradients } = useTheme()
+  const hasPaint = Boolean(componentGradients.llm)
+
   return (
     <div className="group/card relative aspect-square w-full">
       <div
@@ -98,19 +110,35 @@ function ConfigCard({
         onClick={onSelect}
         title={config.base_url ?? formatProviderLabel(config.provider)}
         className={cn(
-          'flex size-full flex-col items-center justify-center gap-2 rounded-2xl border p-3 text-center transition-all @md/inspector:gap-2.5 @md/inspector:p-4',
-          selected
-            ? 'border-connector bg-node-header ring-2 ring-connector/25'
-            : 'border-panel-border bg-node hover:border-connector/50 hover:shadow-sm',
+          'flex size-full flex-col items-center justify-center gap-2 rounded-2xl p-3 text-center transition-all hover:shadow-sm @md/inspector:gap-2.5 @md/inspector:p-4',
+          !hasPaint && 'border',
         )}
+        style={{
+          ...(selected ? componentSurfaceHoverStyle('llm') : componentSurfaceStyle('llm')),
+          ...(selected || hasPaint
+            ? componentPaintBorderStyle('llm')
+            : componentBorderMutedStyle('llm')),
+          ...(selected
+            ? { boxShadow: `0 0 0 2px color-mix(in oklch, ${componentVar('llm', 'ring')} 100%, transparent)` }
+            : {}),
+        }}
       >
-        <div className="flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-connector/90 to-interactive text-node-icon-fg shadow-sm @md/inspector:size-14">
+        <div
+          className="flex size-11 items-center justify-center rounded-full shadow-sm @md/inspector:size-14"
+          style={componentIconGradientStyle('llm')}
+        >
           <BrainCircuit className="size-5 @md/inspector:size-6" />
         </div>
-        <p className="w-full truncate px-1 text-xs font-semibold leading-tight text-node-fg @md/inspector:text-sm">
+        <p
+          className="w-full truncate px-1 text-xs font-semibold leading-tight @md/inspector:text-sm"
+          style={{ color: componentVar('llm', 'foreground') }}
+        >
           {config.model}
         </p>
-        <p className="w-full truncate px-1 text-[11px] leading-tight text-panel-muted @md/inspector:text-xs">
+        <p
+          className="w-full truncate px-1 text-[11px] leading-tight @md/inspector:text-xs"
+          style={{ color: componentVar('llm', 'muted') }}
+        >
           {formatProviderLabel(config.provider)}
         </p>
       </button>
@@ -123,10 +151,25 @@ function AddConfigCard({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-connector/50 bg-node-header/40 p-3 text-panel-muted transition-colors hover:border-connector hover:bg-node-header hover:text-panel-inspector-fg @md/inspector:gap-2.5 @md/inspector:p-4"
+      className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-3 transition-colors @md/inspector:gap-2.5 @md/inspector:p-4"
+      style={{
+        ...componentSurfaceHoverStyle('llm'),
+        ...componentBorderMutedStyle('llm'),
+        color: componentVar('llm', 'muted'),
+        opacity: 0.8,
+      }}
     >
-      <div className="flex size-11 items-center justify-center rounded-xl border border-connector/30 bg-node @md/inspector:size-14">
-        <Plus className="size-5 text-connector @md/inspector:size-6" />
+      <div
+        className="flex size-11 items-center justify-center rounded-xl border @md/inspector:size-14"
+        style={{
+          ...componentSurfaceStyle('llm'),
+          ...componentBorderMutedStyle('llm'),
+        }}
+      >
+        <Plus
+          className="size-5 @md/inspector:size-6"
+          style={{ color: componentVar('llm', 'label') }}
+        />
       </div>
       <span className="text-xs font-medium leading-tight @md/inspector:text-sm">Add new</span>
     </button>

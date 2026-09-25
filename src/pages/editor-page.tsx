@@ -15,6 +15,9 @@ import { ReactFlowProvider, useReactFlow } from '@xyflow/react'
 import { useState } from 'react'
 
 import { AppShell } from '@/components/layout/app-shell'
+import { CanvasPaintPanel } from '@/components/theme/canvas-paint-panel'
+import { FloatingPaintBrush } from '@/components/theme/floating-paint-brush'
+import { PaintModeProvider } from '@/components/theme/paint-mode-provider'
 import { ServerStackExpanded } from '@/features/canvas/server-stack-expanded'
 import { WorkflowCanvas } from '@/features/canvas/workflow-canvas'
 import { getStackIdAtPoint } from '@/lib/canvas/stack-dump'
@@ -29,9 +32,11 @@ import { cn } from '@/lib/utils'
 export function EditorPage() {
   return (
     <AppShell>
-      <ReactFlowProvider>
-        <EditorWorkspace />
-      </ReactFlowProvider>
+      <PaintModeProvider>
+        <ReactFlowProvider>
+          <EditorWorkspace />
+        </ReactFlowProvider>
+      </PaintModeProvider>
     </AppShell>
   )
 }
@@ -104,6 +109,8 @@ function EditorWorkspace() {
       onDragCancel={handleDragCancel}
     >
       <div className="relative h-full min-h-0 overflow-hidden">
+        <CanvasPaintPanel />
+        <FloatingPaintBrush />
         <ComponentRail />
         <CanvasDropZone isDragging={activeType !== null} />
         <ServerStackExpanded />
