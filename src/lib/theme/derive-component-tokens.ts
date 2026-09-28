@@ -5,7 +5,18 @@ import {
 } from '@/lib/theme/paint-palette'
 import { normalizeBrandColors, normalizeHex } from '@/lib/theme/derive-tokens'
 
-export type ThemedComponentType = 'llm' | 'toolServer'
+export type ThemedComponentType =
+  | 'llm'
+  | 'toolServer'
+  | 'threadConfig'
+  | 'serverStack'
+
+function cssPrefixFor(component: ThemedComponentType): string {
+  if (component === 'llm') return 'llm'
+  if (component === 'toolServer') return 'tool-server'
+  if (component === 'threadConfig') return 'thread-config'
+  return 'server-stack'
+}
 
 function parseHex(hex: string): [number, number, number] {
   const normalized = normalizeHex(hex) ?? '#000000'
@@ -81,7 +92,7 @@ export function deriveComponentTokens(
   gradientId?: string,
 ): Record<string, string> {
   const { deep, mid, accent, sand } = normalizeBrandColors(colors)
-  const prefix = component === 'llm' ? 'llm' : 'tool-server'
+  const prefix = cssPrefixFor(component)
   const connector = mode === 'dark' ? lighten(accent, 0.22) : accent
   const interactive = mode === 'dark' ? accent : mid
 
@@ -102,7 +113,7 @@ export function deriveComponentTokens(
 
     let tokens: Record<string, string>
 
-    if (component === 'toolServer') {
+    if (component === 'toolServer' || component === 'serverStack') {
       tokens = {
         ...base,
         shell: alpha(connector, 0.25),
@@ -138,7 +149,7 @@ export function deriveComponentTokens(
 
   let tokens: Record<string, string>
 
-  if (component === 'toolServer') {
+  if (component === 'toolServer' || component === 'serverStack') {
     tokens = {
       ...base,
       shell: alpha(connector, 0.25),
@@ -167,16 +178,54 @@ function toCssBlock(tokens: Record<string, string>): string {
 export function buildComponentThemeCss(
   llmColors: BrandColors,
   toolServerColors: BrandColors,
+  threadConfigColors: BrandColors,
+  serverStackColors: BrandColors,
   llmGradientId?: string,
   toolServerGradientId?: string,
+  threadConfigGradientId?: string,
+  serverStackGradientId?: string,
 ): string {
   const light = {
     ...deriveComponentTokens(llmColors, 'light', 'llm', llmGradientId),
-    ...deriveComponentTokens(toolServerColors, 'light', 'toolServer', toolServerGradientId),
+    ...deriveComponentTokens(
+      toolServerColors,
+      'light',
+      'toolServer',
+      toolServerGradientId,
+    ),
+    ...deriveComponentTokens(
+      threadConfigColors,
+      'light',
+      'threadConfig',
+      threadConfigGradientId,
+    ),
+    ...deriveComponentTokens(
+      serverStackColors,
+      'light',
+      'serverStack',
+      serverStackGradientId,
+    ),
   }
   const dark = {
     ...deriveComponentTokens(llmColors, 'dark', 'llm', llmGradientId),
-    ...deriveComponentTokens(toolServerColors, 'dark', 'toolServer', toolServerGradientId),
+    ...deriveComponentTokens(
+      toolServerColors,
+      'dark',
+      'toolServer',
+      toolServerGradientId,
+    ),
+    ...deriveComponentTokens(
+      threadConfigColors,
+      'dark',
+      'threadConfig',
+      threadConfigGradientId,
+    ),
+    ...deriveComponentTokens(
+      serverStackColors,
+      'dark',
+      'serverStack',
+      serverStackGradientId,
+    ),
   }
 
   return `:root {\n${toCssBlock(light)}\n}\n.dark {\n${toCssBlock(dark)}\n}`
@@ -187,14 +236,22 @@ export const COMPONENT_THEME_CSS_KEY = 'valence-component-theme-css'
 export function applyComponentThemeCss(
   llmColors: BrandColors,
   toolServerColors: BrandColors,
+  threadConfigColors: BrandColors,
+  serverStackColors: BrandColors,
   llmGradientId?: string,
   toolServerGradientId?: string,
+  threadConfigGradientId?: string,
+  serverStackGradientId?: string,
 ) {
   const css = buildComponentThemeCss(
     llmColors,
     toolServerColors,
+    threadConfigColors,
+    serverStackColors,
     llmGradientId,
     toolServerGradientId,
+    threadConfigGradientId,
+    serverStackGradientId,
   )
   let style = document.getElementById('valence-component-theme')
 

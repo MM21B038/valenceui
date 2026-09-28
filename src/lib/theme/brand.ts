@@ -60,7 +60,11 @@ export const BRAND_COLOR_LABELS: Record<keyof BrandColors, string> = {
 export type BuiltInPalette = keyof typeof palettes
 export type ThemePalette = BuiltInPalette | 'custom'
 export type ThemeMode = 'light' | 'dark'
-export type ComponentColorTarget = 'llm' | 'toolServer'
+export type ComponentColorTarget =
+  | 'llm'
+  | 'toolServer'
+  | 'threadConfig'
+  | 'serverStack'
 
 export type ComponentColorsMap = Partial<
   Record<ComponentColorTarget, BrandColors>
@@ -173,6 +177,12 @@ export function parseStoredTheme(
       if (isBrandColors(parsed.componentColors.toolServer)) {
         componentColors.toolServer = parsed.componentColors.toolServer
       }
+      if (isBrandColors(parsed.componentColors.threadConfig)) {
+        componentColors.threadConfig = parsed.componentColors.threadConfig
+      }
+      if (isBrandColors(parsed.componentColors.serverStack)) {
+        componentColors.serverStack = parsed.componentColors.serverStack
+      }
       if (Object.keys(componentColors).length > 0) {
         settings.componentColors = componentColors
       }
@@ -185,6 +195,12 @@ export function parseStoredTheme(
       }
       if (typeof parsed.componentGradients.toolServer === 'string') {
         componentGradients.toolServer = parsed.componentGradients.toolServer
+      }
+      if (typeof parsed.componentGradients.threadConfig === 'string') {
+        componentGradients.threadConfig = parsed.componentGradients.threadConfig
+      }
+      if (typeof parsed.componentGradients.serverStack === 'string') {
+        componentGradients.serverStack = parsed.componentGradients.serverStack
       }
       if (Object.keys(componentGradients).length > 0) {
         settings.componentGradients = componentGradients

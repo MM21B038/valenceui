@@ -17,10 +17,22 @@ import {
   componentSurfaceHoverStyle,
   componentSurfaceStyle,
 } from '@/lib/theme/component-block-styles'
+import type { ThemedComponentType } from '@/lib/theme/derive-component-tokens'
 import { cn } from '@/lib/utils'
 
 const RAIL_ITEM_HEIGHT = 56
 const RAIL_PADDING_TOP = 12
+
+type PaletteThemedType = Extract<
+  PaletteComponent['type'],
+  ThemedComponentType
+>
+
+function isThemedType(
+  type: PaletteComponent['type'],
+): type is PaletteThemedType {
+  return type === 'llm' || type === 'toolServer' || type === 'threadConfig'
+}
 
 function RailItem({
   component,
@@ -39,7 +51,10 @@ function RailItem({
 }) {
   const Icon = component.icon
   const { componentGradients } = useTheme()
-  const hasPaint = Boolean(componentGradients[component.type])
+  const themedType = isThemedType(component.type) ? component.type : null
+  const hasPaint = themedType
+    ? Boolean(componentGradients[themedType])
+    : false
   const centerY =
     RAIL_PADDING_TOP + index * RAIL_ITEM_HEIGHT + RAIL_ITEM_HEIGHT / 2 - scrollTop
   const scale = getRailItemScale(centerY, pointerY)
@@ -51,6 +66,17 @@ function RailItem({
 
   const isActive = isHovered && !isDragging
 
+  const themedStyle = themedType
+    ? {
+        ...(isActive
+          ? componentSurfaceHoverStyle(themedType)
+          : componentSurfaceStyle(themedType)),
+        ...(isActive || hasPaint
+          ? componentPaintBorderStyle(themedType)
+          : componentBorderMutedStyle(themedType)),
+      }
+    : undefined
+
   return (
     <div className="group/rail-item relative flex h-14 items-center justify-center">
       <button
@@ -58,14 +84,13 @@ function RailItem({
         type="button"
         style={{
           transform: `scale(${isDragging ? 1 : scale})`,
-          ...(isActive ? componentSurfaceHoverStyle(component.type) : componentSurfaceStyle(component.type)),
-          ...(isActive || hasPaint
-            ? componentPaintBorderStyle(component.type)
-            : componentBorderMutedStyle(component.type)),
+          ...themedStyle,
         }}
         className={cn(
           'relative flex size-12 touch-none items-center justify-center rounded-2xl shadow-sm transition-[transform,opacity,box-shadow,border-color,background-color] duration-200 ease-out',
-          !hasPaint && 'border',
+          !themedType && 'border border-panel-border bg-node',
+          !themedType && isActive && 'border-connector bg-node-header',
+          themedType && !hasPaint && 'border',
           'hover:shadow-md',
           'active:cursor-grabbing',
           isDragging ? 'cursor-grabbing opacity-40' : 'cursor-grab',
@@ -76,8 +101,14 @@ function RailItem({
         {...attributes}
       >
         <div
-          className="flex size-9 items-center justify-center rounded-xl"
-          style={componentIconGradientStyle(component.type)}
+          className={cn(
+            'flex size-9 items-center justify-center rounded-xl',
+            !themedType &&
+              'bg-gradient-to-br from-interactive/90 to-connector text-node-icon-fg',
+          )}
+          style={
+            themedType ? componentIconGradientStyle(themedType) : undefined
+          }
         >
           <Icon className="size-4" />
         </div>

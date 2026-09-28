@@ -18,6 +18,7 @@ import {
 } from '@/lib/canvas/stack-dump'
 import type { LlmNodeData } from '@/lib/types/llm-config'
 import type { ToolServerNodeData } from '@/lib/types/mcp-server-config'
+import type { ThreadConfigNodeData } from '@/lib/types/thread-config'
 import type { ValenceNode, WorkflowGraph } from '@/lib/types/workflow'
 
 interface WorkflowState {
@@ -28,6 +29,7 @@ interface WorkflowState {
   viewport: Viewport
   llmModalNodeId: string | null
   toolServerModalNodeId: string | null
+  threadConfigModalNodeId: string | null
   expandedStackId: string | null
   setWorkflowMeta: (id: string, name: string) => void
   setViewport: (viewport: Viewport) => void
@@ -36,6 +38,7 @@ interface WorkflowState {
   onConnect: (connection: Connection) => void
   addLlmNode: (position: { x: number; y: number }) => void
   addToolServerNode: (position: { x: number; y: number }) => void
+  addThreadConfigNode: (position: { x: number; y: number }) => void
   addServerStack: (position: { x: number; y: number }) => void
   addToolServerToStack: (stackId: string) => string | null
   dumpServerIntoStack: (toolServerId: string, stackId: string) => void
@@ -44,10 +47,16 @@ interface WorkflowState {
   closeExpandedStack: () => void
   updateLlmNode: (nodeId: string, data: Partial<LlmNodeData>) => void
   updateToolServerNode: (nodeId: string, data: Partial<ToolServerNodeData>) => void
+  updateThreadConfigNode: (
+    nodeId: string,
+    data: Partial<ThreadConfigNodeData>,
+  ) => void
   openLlmModal: (nodeId: string) => void
   closeLlmModal: () => void
   openToolServerModal: (nodeId: string) => void
   closeToolServerModal: () => void
+  openThreadConfigModal: (nodeId: string) => void
+  closeThreadConfigModal: () => void
   duplicateNode: (nodeId: string) => string | null
   duplicateStackMember: (toolServerId: string) => string | null
   removeNode: (nodeId: string) => void
@@ -77,6 +86,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   viewport: defaultViewport,
   llmModalNodeId: null,
   toolServerModalNodeId: null,
+  threadConfigModalNodeId: null,
   expandedStackId: null,
 
   setWorkflowMeta: (id, name) => set({ workflowId: id, workflowName: name }),
@@ -108,6 +118,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       toolServerModalNodeId: removedSet.has(state.toolServerModalNodeId ?? '')
         ? null
         : state.toolServerModalNodeId,
+      threadConfigModalNodeId: removedSet.has(state.threadConfigModalNodeId ?? '')
+        ? null
+        : state.threadConfigModalNodeId,
     })
   },
 
@@ -156,6 +169,20 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
           position,
           deletable: true,
           data: { label: 'Tool Server' },
+        },
+      ],
+    }),
+
+  addThreadConfigNode: (position) =>
+    set({
+      nodes: [
+        ...get().nodes,
+        {
+          id: createNodeId(),
+          type: 'threadConfig',
+          position,
+          deletable: true,
+          data: { label: 'Thread Config' },
         },
       ],
     }),
@@ -297,7 +324,12 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   openExpandedStack: (stackId) =>
-    set({ expandedStackId: stackId, llmModalNodeId: null, toolServerModalNodeId: null }),
+    set({
+      expandedStackId: stackId,
+      llmModalNodeId: null,
+      toolServerModalNodeId: null,
+      threadConfigModalNodeId: null,
+    }),
 
   closeExpandedStack: () =>
     set({ expandedStackId: null, toolServerModalNodeId: null }),
@@ -320,15 +352,41 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       ),
     }),
 
+  updateThreadConfigNode: (nodeId, data) =>
+    set({
+      nodes: get().nodes.map((node) =>
+        node.id === nodeId && node.type === 'threadConfig'
+          ? { ...node, data: { ...node.data, ...data } }
+          : node,
+      ),
+    }),
+
   openLlmModal: (nodeId) =>
-    set({ llmModalNodeId: nodeId, toolServerModalNodeId: null }),
+    set({
+      llmModalNodeId: nodeId,
+      toolServerModalNodeId: null,
+      threadConfigModalNodeId: null,
+    }),
 
   closeLlmModal: () => set({ llmModalNodeId: null }),
 
   openToolServerModal: (nodeId) =>
-    set({ toolServerModalNodeId: nodeId, llmModalNodeId: null }),
+    set({
+      toolServerModalNodeId: nodeId,
+      llmModalNodeId: null,
+      threadConfigModalNodeId: null,
+    }),
 
   closeToolServerModal: () => set({ toolServerModalNodeId: null }),
+
+  openThreadConfigModal: (nodeId) =>
+    set({
+      threadConfigModalNodeId: nodeId,
+      llmModalNodeId: null,
+      toolServerModalNodeId: null,
+    }),
+
+  closeThreadConfigModal: () => set({ threadConfigModalNodeId: null }),
 
   duplicateNode: (nodeId) => {
     const state = get()
@@ -356,6 +414,23 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     }
 
     if (node.type === 'toolServer' && !node.data.stackId) {
+      const newId = createNodeId()
+      set({
+        nodes: [
+          ...deselectNodes,
+          {
+            ...node,
+            id: newId,
+            position,
+            selected: true,
+            data: { ...node.data },
+          },
+        ],
+      })
+      return newId
+    }
+
+    if (node.type === 'threadConfig') {
       const newId = createNodeId()
       set({
         nodes: [
@@ -490,6 +565,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       llmModalNodeId: state.llmModalNodeId === nodeId ? null : state.llmModalNodeId,
       toolServerModalNodeId:
         state.toolServerModalNodeId === nodeId ? null : state.toolServerModalNodeId,
+      threadConfigModalNodeId:
+        state.threadConfigModalNodeId === nodeId
+          ? null
+          : state.threadConfigModalNodeId,
       expandedStackId: state.expandedStackId === nodeId ? null : state.expandedStackId,
     })
   },
@@ -510,6 +589,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       toolServerModalNodeId: removedSet.has(state.toolServerModalNodeId ?? '')
         ? null
         : state.toolServerModalNodeId,
+      threadConfigModalNodeId: removedSet.has(state.threadConfigModalNodeId ?? '')
+        ? null
+        : state.threadConfigModalNodeId,
     })
   },
 

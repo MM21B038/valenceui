@@ -146,7 +146,7 @@ export function CanvasPaintPanel() {
                     Dragging paint…
                   </p>
                   <p className="text-[11px] text-panel-muted">
-                    Drop on an LLM or Tool Server block
+                    Drop on an LLM, Tool Server, Thread, or Stack block
                   </p>
                 </>
               ) : (
@@ -223,6 +223,28 @@ export function CanvasPaintPanel() {
                 className="h-6 px-2 text-[10px] text-panel-muted hover:text-panel-fg"
               >
                 Reset MCP
+              </Button>
+            )}
+            {componentGradients.threadConfig && (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => clearComponentGradient('threadConfig')}
+                className="h-6 px-2 text-[10px] text-panel-muted hover:text-panel-fg"
+              >
+                Reset Thread
+              </Button>
+            )}
+            {componentGradients.serverStack && (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => clearComponentGradient('serverStack')}
+                className="h-6 px-2 text-[10px] text-panel-muted hover:text-panel-fg"
+              >
+                Reset Stack
               </Button>
             )}
           </div>

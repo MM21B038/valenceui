@@ -1,6 +1,6 @@
-import { BrainCircuit, Server, type LucideIcon } from 'lucide-react'
+import { BrainCircuit, MessagesSquare, Server, type LucideIcon } from 'lucide-react'
 
-export type ComponentType = 'llm' | 'toolServer'
+export type ComponentType = 'llm' | 'toolServer' | 'threadConfig'
 
 export interface PaletteComponent {
   type: ComponentType
@@ -21,6 +21,12 @@ export const PALETTE_COMPONENTS: PaletteComponent[] = [
     label: 'Tool Server',
     description: 'MCP tool server block',
     icon: Server,
+  },
+  {
+    type: 'threadConfig',
+    label: 'Thread Config',
+    description: 'Thread prompts, limits & hide rules',
+    icon: MessagesSquare,
   },
 ]
 

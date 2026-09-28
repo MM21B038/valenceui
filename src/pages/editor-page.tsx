@@ -23,6 +23,7 @@ import { WorkflowCanvas } from '@/features/canvas/workflow-canvas'
 import { getStackIdAtPoint } from '@/lib/canvas/stack-dump'
 import { LlmConfigPanel } from '@/features/llm/llm-config-panel'
 import { ToolServerConfigPanel } from '@/features/tool-server/tool-server-config-panel'
+import { ThreadConfigPanel } from '@/features/thread-config/thread-config-panel'
 import { ComponentRail } from '@/features/palette/component-rail'
 import { PaletteDragPreview } from '@/features/palette/palette-drag-preview'
 import type { ComponentType } from '@/features/palette/component-registry'
@@ -44,11 +45,15 @@ export function EditorPage() {
 function EditorWorkspace() {
   const addLlmNode = useWorkflowStore((state) => state.addLlmNode)
   const addToolServerNode = useWorkflowStore((state) => state.addToolServerNode)
+  const addThreadConfigNode = useWorkflowStore((state) => state.addThreadConfigNode)
   const addToolServerToStack = useWorkflowStore((state) => state.addToolServerToStack)
   const nodes = useWorkflowStore((state) => state.nodes)
   const llmModalNodeId = useWorkflowStore((state) => state.llmModalNodeId)
   const toolServerModalNodeId = useWorkflowStore(
     (state) => state.toolServerModalNodeId,
+  )
+  const threadConfigModalNodeId = useWorkflowStore(
+    (state) => state.threadConfigModalNodeId,
   )
   const { screenToFlowPosition } = useReactFlow()
   const [activeType, setActiveType] = useState<ComponentType | null>(null)
@@ -94,6 +99,10 @@ function EditorWorkspace() {
 
       addToolServerNode(position)
     }
+
+    if (type === 'threadConfig') {
+      addThreadConfigNode(position)
+    }
   }
 
   const handleDragCancel = () => {
@@ -118,6 +127,8 @@ function EditorWorkspace() {
           <LlmConfigPanel />
         ) : toolServerModalNodeId ? (
           <ToolServerConfigPanel />
+        ) : threadConfigModalNodeId ? (
+          <ThreadConfigPanel />
         ) : null}
       </div>
 

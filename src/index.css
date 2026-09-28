@@ -347,6 +347,16 @@
   outline-offset: 4px;
 }
 
+.paint-mode-active [data-paint-target='threadConfig']:hover {
+  outline: 2px dashed color-mix(in oklch, var(--connector) 55%, transparent);
+  outline-offset: 4px;
+}
+
+.paint-mode-active [data-paint-target='serverStack']:hover {
+  outline: 2px dashed color-mix(in oklch, var(--connector) 55%, transparent);
+  outline-offset: 4px;
+}
+
 .paint-mode-active [data-paint-target='toolServer']:hover .node-shape-hex:first-child {
   filter: drop-shadow(0 0 8px color-mix(in oklch, var(--connector) 55%, transparent));
 }
@@ -377,6 +387,16 @@
 }
 
 .paint-mode-active [data-paint-target='llm'].paint-drop-target {
+  outline: 3px solid color-mix(in oklch, var(--connector) 70%, transparent);
+  outline-offset: 5px;
+}
+
+.paint-mode-active [data-paint-target='threadConfig'].paint-drop-target {
+  outline: 3px solid color-mix(in oklch, var(--connector) 70%, transparent);
+  outline-offset: 5px;
+}
+
+.paint-mode-active [data-paint-target='serverStack'].paint-drop-target {
   outline: 3px solid color-mix(in oklch, var(--connector) 70%, transparent);
   outline-offset: 5px;
 }

@@ -38,7 +38,14 @@ function findPaintTargetAt(x: number, y: number): ComponentColorTarget | null {
   const target = element?.closest('[data-paint-target]')
   if (!target) return null
   const type = target.getAttribute('data-paint-target')
-  if (type === 'llm' || type === 'toolServer') return type
+  if (
+    type === 'llm' ||
+    type === 'toolServer' ||
+    type === 'threadConfig' ||
+    type === 'serverStack'
+  ) {
+    return type
+  }
   return null
 }
 

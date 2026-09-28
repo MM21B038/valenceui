@@ -72,11 +72,23 @@ function applyTheme(settings: ThemeSettings) {
 
   const llmColors = resolveComponentBrandColors(settings, 'llm')
   const toolServerColors = resolveComponentBrandColors(settings, 'toolServer')
+  const threadConfigColors = resolveComponentBrandColors(
+    settings,
+    'threadConfig',
+  )
+  const serverStackColors = resolveComponentBrandColors(
+    settings,
+    'serverStack',
+  )
   applyComponentThemeCss(
     llmColors,
     toolServerColors,
+    threadConfigColors,
+    serverStackColors,
     settings.componentGradients?.llm,
     settings.componentGradients?.toolServer,
+    settings.componentGradients?.threadConfig,
+    settings.componentGradients?.serverStack,
   )
 }
 

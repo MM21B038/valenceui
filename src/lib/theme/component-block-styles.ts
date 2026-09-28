@@ -6,7 +6,14 @@ export function componentVar(
   type: ThemedComponentType,
   token: string,
 ): string {
-  const prefix = type === 'llm' ? 'llm' : 'tool-server'
+  const prefix =
+    type === 'llm'
+      ? 'llm'
+      : type === 'toolServer'
+        ? 'tool-server'
+        : type === 'threadConfig'
+          ? 'thread-config'
+          : 'server-stack'
   return `var(--${prefix}-${token})`
 }
 
