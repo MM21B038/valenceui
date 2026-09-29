@@ -134,6 +134,13 @@ export async function createServerStack(servers: string[]) {
   return data
 }
 
+export async function getServerStack(uuid: string) {
+  const { data } = await apiClient.get<ServerStackEntity>(
+    `/server-stack/${uuid}/`,
+  )
+  return data
+}
+
 export async function createAgentSkillStack(agent_skills: string[]) {
   const { data } = await apiClient.post<AgentSkillStackEntity>(
     '/agent-skill-stack/',
@@ -142,10 +149,24 @@ export async function createAgentSkillStack(agent_skills: string[]) {
   return data
 }
 
+export async function getAgentSkillStack(uuid: string) {
+  const { data } = await apiClient.get<AgentSkillStackEntity>(
+    `/agent-skill-stack/${uuid}/`,
+  )
+  return data
+}
+
 export async function createAgentInterfaceStack(agent_interfaces: string[]) {
   const { data } = await apiClient.post<AgentInterfaceStackEntity>(
     '/agent-interface-stack/',
     { agent_interfaces },
+  )
+  return data
+}
+
+export async function getAgentInterfaceStack(uuid: string) {
+  const { data } = await apiClient.get<AgentInterfaceStackEntity>(
+    `/agent-interface-stack/${uuid}/`,
   )
   return data
 }

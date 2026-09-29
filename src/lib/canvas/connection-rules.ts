@@ -162,6 +162,56 @@ const REQUIRED_PORT: Partial<
   },
 }
 
+/** Fixed role port required on `nodeType` when linked to `peerType`, if any. */
+export function requiredPortFor(
+  nodeType: ValenceNodeType,
+  peerType: ValenceNodeType,
+): string | null {
+  return REQUIRED_PORT[nodeType]?.[peerType] ?? null
+}
+
+/** Pick the cardinal side on `from` that faces toward `to`. */
+export function inferCardinalHandle(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): CardinalPortHandleId {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0 ? 'port-right' : 'port-left'
+  }
+  return dy >= 0 ? 'port-bottom' : 'port-top'
+}
+
+/**
+ * Reconstruct source/target handles for a persisted connection that only
+ * stores node UUIDs (role ports from REQUIRED_PORT; cardinal from geometry).
+ */
+export function resolveEdgeHandles(options: {
+  sourceType: ValenceNodeType
+  targetType: ValenceNodeType
+  sourcePosition: { x: number; y: number }
+  targetPosition: { x: number; y: number }
+}): { sourceHandle: string; targetHandle: string } {
+  const { sourceType, targetType, sourcePosition, targetPosition } = options
+  const sourceProfile = getNodeProfile(sourceType)
+  const targetProfile = getNodeProfile(targetType)
+
+  const sourceHandle =
+    requiredPortFor(sourceType, targetType) ??
+    (sourceProfile && !sourceProfile.fixedPorts
+      ? inferCardinalHandle(sourcePosition, targetPosition)
+      : (sourceProfile?.portHandleIds[0] ?? 'port-right'))
+
+  const targetHandle =
+    requiredPortFor(targetType, sourceType) ??
+    (targetProfile && !targetProfile.fixedPorts
+      ? inferCardinalHandle(targetPosition, sourcePosition)
+      : (targetProfile?.portHandleIds[0] ?? 'port-left'))
+
+  return { sourceHandle, targetHandle }
+}
+
 export function getNodeProfile(type: ValenceNodeType | undefined) {
   if (!type) return null
   return NODE_CONNECTION_PROFILES[type]

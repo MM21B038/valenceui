@@ -23,7 +23,7 @@ import { A2aAddAgentChrome } from '@/features/a2a/a2a-add-agent'
 import { GroupStackExpanded } from '@/features/canvas/group-stack-expanded'
 import { WorkflowCanvas } from '@/features/canvas/workflow-canvas'
 import { getStackIdAtPoint } from '@/lib/canvas/stack-dump'
-import { workspaceDetailToGraph } from '@/lib/canvas/workspace-graph'
+import { hydrateWorkspaceGraph } from '@/lib/canvas/workspace-graph'
 import { AgentCardConfigPanel } from '@/features/agent-card/agent-card-config-panel'
 import { AgentExecutorConfigPanel } from '@/features/agent-executor/agent-executor-config-panel'
 import { AgentInterfaceConfigPanel } from '@/features/agent-interface/agent-interface-config-panel'
@@ -43,29 +43,56 @@ export function EditorPage() {
   const loadWorkspaceGraph = useWorkflowStore((state) => state.loadWorkspaceGraph)
   const workflowId = useWorkflowStore((state) => state.workflowId)
   const { data, isLoading, isError } = useWorkspace(workspaceId ?? '')
+  const [isHydrating, setIsHydrating] = useState(false)
+  const [hydrateError, setHydrateError] = useState(false)
 
   useEffect(() => {
     if (!data || !workspaceId) return
-    if (workflowId === data.uuid) return
-    const graph = workspaceDetailToGraph(data)
-    loadWorkspaceGraph({
-      id: data.uuid,
-      name: data.name,
-      type: data.type,
-      nodes: graph.nodes,
-      edges: graph.edges,
-    })
-  }, [data, workspaceId, workflowId, loadWorkspaceGraph])
+    // Read from the store directly so this effect does not re-run (and
+    // cancel) when loadWorkspaceGraph updates workflowId.
+    if (useWorkflowStore.getState().workflowId === data.uuid) return
+
+    let cancelled = false
+    setIsHydrating(true)
+    setHydrateError(false)
+
+    hydrateWorkspaceGraph(data)
+      .then((graph) => {
+        if (cancelled) return
+        loadWorkspaceGraph({
+          id: data.uuid,
+          name: data.name,
+          type: data.type,
+          nodes: graph.nodes,
+          edges: graph.edges,
+        })
+      })
+      .catch(() => {
+        if (!cancelled) setHydrateError(true)
+      })
+      .finally(() => {
+        setIsHydrating(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [data, workspaceId, loadWorkspaceGraph])
+
+  const graphReady = Boolean(data && workflowId === data.uuid)
+  const showLoading =
+    Boolean(workspaceId) && (isLoading || isHydrating || (!graphReady && !hydrateError))
+  const showError = Boolean(workspaceId) && (isError || hydrateError)
 
   return (
     <AppShell>
       <PaintModeProvider>
         <ReactFlowProvider>
-          {workspaceId && isLoading ? (
+          {showLoading ? (
             <div className="flex h-full items-center justify-center text-sm text-panel-muted">
               Loading workspace…
             </div>
-          ) : workspaceId && isError ? (
+          ) : showError ? (
             <div className="flex h-full items-center justify-center text-sm text-destructive">
               Could not load workspace.
             </div>
