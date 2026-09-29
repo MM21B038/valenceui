@@ -305,6 +305,108 @@
   stroke: var(--connector);
 }
 
+.valence-flow-edge-path {
+  pointer-events: stroke;
+}
+
+@keyframes valence-flow-break {
+  to {
+    stroke-dashoffset: -22;
+  }
+}
+
+/* Broken / dashed line with color flowing along the path */
+.valence-flow-edge-break {
+  stroke-dasharray: 7 5;
+  animation: valence-flow-break 0.85s linear infinite;
+  pointer-events: none;
+}
+
+.valence-flow-edge-path.valence-flow-edge-break {
+  pointer-events: stroke;
+}
+
+@keyframes valence-edge-retract-source {
+  from {
+    stroke-dasharray: 0.5 1;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  to {
+    stroke-dasharray: 0 1;
+    stroke-dashoffset: 0;
+    opacity: 0.15;
+  }
+}
+
+@keyframes valence-edge-retract-target {
+  from {
+    stroke-dasharray: 0.5 1;
+    stroke-dashoffset: -0.5;
+    opacity: 1;
+  }
+  to {
+    stroke-dasharray: 0 1;
+    stroke-dashoffset: -1;
+    opacity: 0.15;
+  }
+}
+
+.valence-flow-edge-retract-source {
+  animation: valence-edge-retract-source 0.45s cubic-bezier(0.22, 1, 0.36, 1)
+    forwards;
+  pointer-events: none;
+}
+
+.valence-flow-edge-retract-target {
+  animation: valence-edge-retract-target 0.45s cubic-bezier(0.22, 1, 0.36, 1)
+    forwards;
+  pointer-events: none;
+}
+
+@keyframes valence-cut-snip {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  35% {
+    transform: rotate(-28deg) scale(1.12);
+  }
+  55% {
+    transform: rotate(16deg) scale(0.96);
+  }
+  100% {
+    transform: rotate(-8deg) scale(0.7);
+    opacity: 0;
+  }
+}
+
+@keyframes valence-cut-flash {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--destructive, #e11d48) 45%, transparent);
+    opacity: 0.9;
+    transform: scale(0.7);
+  }
+  100% {
+    box-shadow: 0 0 0 18px transparent;
+    opacity: 0;
+    transform: scale(1.55);
+  }
+}
+
+.valence-cut-btn-snipping {
+  border-color: color-mix(in oklch, var(--destructive, #e11d48) 55%, transparent) !important;
+  background: color-mix(in oklch, var(--destructive, #e11d48) 12%, var(--panel)) !important;
+  color: var(--destructive, #e11d48) !important;
+}
+
+.valence-cut-scissors {
+  animation: valence-cut-snip 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.valence-cut-flash-active {
+  animation: valence-cut-flash 0.45s ease-out forwards;
+}
+
 .react-flow__controls-button {
   background: var(--node) !important;
   border-color: var(--border) !important;

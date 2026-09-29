@@ -1,7 +1,7 @@
 import {
-  getConnectedPortId,
-  isNodeConnected,
+  getConnectedPortIds,
   NODE_PORT_SIDES,
+  type CardinalPortHandleId,
 } from '@/lib/canvas/connection-rules'
 import { NodePort } from '@/features/canvas/nodes/node-port'
 import { useWorkflowStore } from '@/stores/workflow-store'
@@ -12,49 +12,43 @@ interface NodePortsProps {
 }
 
 /**
- * Four-sided connection dots — visible on hover / when the cursor is near the node.
- * Once connected, only the active port stays visible until the edge is removed.
+ * Four-sided connection dots — each side accepts at most one edge.
+ * Free sides stay available on hover so multi-role hubs (e.g. server stack
+ * → LLM + Thread + Executor) can take more than one link.
  */
 export function NodePorts({ nodeId }: NodePortsProps) {
   const edges = useWorkflowStore((state) => state.edges)
-  const isConnected = isNodeConnected(edges, nodeId)
-  const connectedPortId = getConnectedPortId(edges, nodeId)
-
-  const portVisibility = isConnected
-    ? ''
-    : 'opacity-0 scale-75 pointer-events-none group-hover/node:opacity-100 group-hover/node:scale-100 group-hover/node:pointer-events-auto'
+  const connectedPorts = new Set(getConnectedPortIds(edges, nodeId))
 
   return (
     <>
       {NODE_PORT_SIDES.map((side) => {
-        const isActivePort = connectedPortId === side.id
-        const isVisible = isConnected ? isActivePort : true
-
-        if (isConnected && !isActivePort) return null
+        const isActivePort = connectedPorts.has(side.id as CardinalPortHandleId)
+        const isConnectable = !isActivePort
+        const idleReveal =
+          'opacity-0 scale-75 pointer-events-none group-hover/node:opacity-100 group-hover/node:scale-100 group-hover/node:pointer-events-auto'
 
         return (
-          <>
+          <div key={side.id}>
             <NodePort
-              key={`${side.id}-target`}
               id={side.id}
               handleType="target"
               position={side.position}
               isActive={isActivePort}
-              isConnectable={!isConnected}
-              showVisual={isVisible}
-              className={cn('!z-20', portVisibility)}
+              isConnectable={isConnectable}
+              showVisual
+              className={cn('!z-20', !isActivePort && idleReveal)}
             />
             <NodePort
-              key={`${side.id}-source`}
               id={side.id}
               handleType="source"
               position={side.position}
               isActive={isActivePort}
-              isConnectable={!isConnected}
+              isConnectable={isConnectable}
               showVisual={false}
-              className={cn('!z-30', portVisibility)}
+              className={cn('!z-30', !isActivePort && idleReveal)}
             />
-          </>
+          </div>
         )
       })}
     </>

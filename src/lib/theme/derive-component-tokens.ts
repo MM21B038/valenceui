@@ -10,12 +10,51 @@ export type ThemedComponentType =
   | 'toolServer'
   | 'threadConfig'
   | 'serverStack'
+  | 'agentSkill'
+  | 'agentInterface'
+  | 'agentCard'
+  | 'agentExecutor'
+  | 'skillStack'
+  | 'interfaceStack'
+
+export const THEMED_COMPONENT_TYPES: ThemedComponentType[] = [
+  'llm',
+  'toolServer',
+  'threadConfig',
+  'serverStack',
+  'agentSkill',
+  'agentInterface',
+  'agentCard',
+  'agentExecutor',
+  'skillStack',
+  'interfaceStack',
+]
+
+const CSS_PREFIX: Record<ThemedComponentType, string> = {
+  llm: 'llm',
+  toolServer: 'tool-server',
+  threadConfig: 'thread-config',
+  serverStack: 'server-stack',
+  agentSkill: 'agent-skill',
+  agentInterface: 'agent-interface',
+  agentCard: 'agent-card',
+  agentExecutor: 'agent-executor',
+  skillStack: 'skill-stack',
+  interfaceStack: 'interface-stack',
+}
 
 function cssPrefixFor(component: ThemedComponentType): string {
-  if (component === 'llm') return 'llm'
-  if (component === 'toolServer') return 'tool-server'
-  if (component === 'threadConfig') return 'thread-config'
-  return 'server-stack'
+  return CSS_PREFIX[component]
+}
+
+function usesShellTokens(component: ThemedComponentType) {
+  return (
+    component === 'toolServer' ||
+    component === 'serverStack' ||
+    component === 'agentInterface' ||
+    component === 'interfaceStack' ||
+    component === 'skillStack'
+  )
 }
 
 function parseHex(hex: string): [number, number, number] {
@@ -113,7 +152,7 @@ export function deriveComponentTokens(
 
     let tokens: Record<string, string>
 
-    if (component === 'toolServer' || component === 'serverStack') {
+    if (usesShellTokens(component)) {
       tokens = {
         ...base,
         shell: alpha(connector, 0.25),
@@ -149,7 +188,7 @@ export function deriveComponentTokens(
 
   let tokens: Record<string, string>
 
-  if (component === 'toolServer' || component === 'serverStack') {
+  if (usesShellTokens(component)) {
     tokens = {
       ...base,
       shell: alpha(connector, 0.25),
@@ -176,56 +215,31 @@ function toCssBlock(tokens: Record<string, string>): string {
 }
 
 export function buildComponentThemeCss(
-  llmColors: BrandColors,
-  toolServerColors: BrandColors,
-  threadConfigColors: BrandColors,
-  serverStackColors: BrandColors,
-  llmGradientId?: string,
-  toolServerGradientId?: string,
-  threadConfigGradientId?: string,
-  serverStackGradientId?: string,
+  colorsByType: Record<ThemedComponentType, BrandColors>,
+  gradientsByType: Partial<Record<ThemedComponentType, string>> = {},
 ): string {
-  const light = {
-    ...deriveComponentTokens(llmColors, 'light', 'llm', llmGradientId),
-    ...deriveComponentTokens(
-      toolServerColors,
-      'light',
-      'toolServer',
-      toolServerGradientId,
-    ),
-    ...deriveComponentTokens(
-      threadConfigColors,
-      'light',
-      'threadConfig',
-      threadConfigGradientId,
-    ),
-    ...deriveComponentTokens(
-      serverStackColors,
-      'light',
-      'serverStack',
-      serverStackGradientId,
-    ),
-  }
-  const dark = {
-    ...deriveComponentTokens(llmColors, 'dark', 'llm', llmGradientId),
-    ...deriveComponentTokens(
-      toolServerColors,
-      'dark',
-      'toolServer',
-      toolServerGradientId,
-    ),
-    ...deriveComponentTokens(
-      threadConfigColors,
-      'dark',
-      'threadConfig',
-      threadConfigGradientId,
-    ),
-    ...deriveComponentTokens(
-      serverStackColors,
-      'dark',
-      'serverStack',
-      serverStackGradientId,
-    ),
+  const light: Record<string, string> = {}
+  const dark: Record<string, string> = {}
+
+  for (const type of THEMED_COMPONENT_TYPES) {
+    Object.assign(
+      light,
+      deriveComponentTokens(
+        colorsByType[type],
+        'light',
+        type,
+        gradientsByType[type],
+      ),
+    )
+    Object.assign(
+      dark,
+      deriveComponentTokens(
+        colorsByType[type],
+        'dark',
+        type,
+        gradientsByType[type],
+      ),
+    )
   }
 
   return `:root {\n${toCssBlock(light)}\n}\n.dark {\n${toCssBlock(dark)}\n}`
@@ -234,25 +248,10 @@ export function buildComponentThemeCss(
 export const COMPONENT_THEME_CSS_KEY = 'valence-component-theme-css'
 
 export function applyComponentThemeCss(
-  llmColors: BrandColors,
-  toolServerColors: BrandColors,
-  threadConfigColors: BrandColors,
-  serverStackColors: BrandColors,
-  llmGradientId?: string,
-  toolServerGradientId?: string,
-  threadConfigGradientId?: string,
-  serverStackGradientId?: string,
+  colorsByType: Record<ThemedComponentType, BrandColors>,
+  gradientsByType: Partial<Record<ThemedComponentType, string>> = {},
 ) {
-  const css = buildComponentThemeCss(
-    llmColors,
-    toolServerColors,
-    threadConfigColors,
-    serverStackColors,
-    llmGradientId,
-    toolServerGradientId,
-    threadConfigGradientId,
-    serverStackGradientId,
-  )
+  const css = buildComponentThemeCss(colorsByType, gradientsByType)
   let style = document.getElementById('valence-component-theme')
 
   if (!style) {

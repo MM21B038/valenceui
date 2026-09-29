@@ -4,9 +4,8 @@ import {
 } from '@/features/palette/component-registry'
 import { useTheme } from '@/components/theme/theme-provider'
 import {
+  componentBlockChromeStyle,
   componentIconGradientStyle,
-  componentPaintBorderStyle,
-  componentSurfaceStyle,
 } from '@/lib/theme/component-block-styles'
 import type { ThemedComponentType } from '@/lib/theme/derive-component-tokens'
 import { cn } from '@/lib/utils'
@@ -19,7 +18,15 @@ interface PaletteDragPreviewProps {
 type PaletteThemedType = Extract<ComponentType, ThemedComponentType>
 
 function isThemedType(type: ComponentType): type is PaletteThemedType {
-  return type === 'llm' || type === 'toolServer' || type === 'threadConfig'
+  return (
+    type === 'llm' ||
+    type === 'toolServer' ||
+    type === 'threadConfig' ||
+    type === 'agentSkill' ||
+    type === 'agentInterface' ||
+    type === 'agentCard' ||
+    type === 'agentExecutor'
+  )
 }
 
 export function PaletteDragPreview({ type, className }: PaletteDragPreviewProps) {
@@ -39,10 +46,7 @@ export function PaletteDragPreview({ type, className }: PaletteDragPreviewProps)
       )}
       style={
         themedType
-          ? {
-              ...componentSurfaceStyle(themedType),
-              ...(hasPaint ? componentPaintBorderStyle(themedType) : {}),
-            }
+          ? componentBlockChromeStyle(themedType, { hasPaint })
           : undefined
       }
     >

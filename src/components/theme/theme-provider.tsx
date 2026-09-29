@@ -70,25 +70,20 @@ function applyTheme(settings: ThemeSettings) {
     clearCustomThemeCss()
   }
 
-  const llmColors = resolveComponentBrandColors(settings, 'llm')
-  const toolServerColors = resolveComponentBrandColors(settings, 'toolServer')
-  const threadConfigColors = resolveComponentBrandColors(
-    settings,
-    'threadConfig',
-  )
-  const serverStackColors = resolveComponentBrandColors(
-    settings,
-    'serverStack',
-  )
   applyComponentThemeCss(
-    llmColors,
-    toolServerColors,
-    threadConfigColors,
-    serverStackColors,
-    settings.componentGradients?.llm,
-    settings.componentGradients?.toolServer,
-    settings.componentGradients?.threadConfig,
-    settings.componentGradients?.serverStack,
+    {
+      llm: resolveComponentBrandColors(settings, 'llm'),
+      toolServer: resolveComponentBrandColors(settings, 'toolServer'),
+      threadConfig: resolveComponentBrandColors(settings, 'threadConfig'),
+      serverStack: resolveComponentBrandColors(settings, 'serverStack'),
+      agentSkill: resolveComponentBrandColors(settings, 'agentSkill'),
+      agentInterface: resolveComponentBrandColors(settings, 'agentInterface'),
+      agentCard: resolveComponentBrandColors(settings, 'agentCard'),
+      agentExecutor: resolveComponentBrandColors(settings, 'agentExecutor'),
+      skillStack: resolveComponentBrandColors(settings, 'skillStack'),
+      interfaceStack: resolveComponentBrandColors(settings, 'interfaceStack'),
+    },
+    settings.componentGradients ?? {},
   )
 }
 

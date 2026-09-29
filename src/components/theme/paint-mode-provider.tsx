@@ -42,7 +42,13 @@ function findPaintTargetAt(x: number, y: number): ComponentColorTarget | null {
     type === 'llm' ||
     type === 'toolServer' ||
     type === 'threadConfig' ||
-    type === 'serverStack'
+    type === 'serverStack' ||
+    type === 'agentSkill' ||
+    type === 'agentInterface' ||
+    type === 'agentCard' ||
+    type === 'agentExecutor' ||
+    type === 'skillStack' ||
+    type === 'interfaceStack'
   ) {
     return type
   }
