@@ -10,20 +10,66 @@ export const NODE_PORT_SIDES = [
   { id: 'port-left', position: Position.Left },
 ] as const
 
-/** Fixed Thread Config ports — agent (LLM) on the left, server on the right. */
+/** Thread Config — Executor left, Server right. Never LLM. */
 export const THREAD_CONFIG_PORTS = [
-  { id: 'port-agent', position: Position.Left, label: 'Agent' },
+  { id: 'port-agent', position: Position.Left, label: 'Executor' },
   { id: 'port-server', position: Position.Right, label: 'Server' },
+] as const
+
+/** LLM — Server left, Executor right (same pattern as Thread Config). */
+export const LLM_PORTS = [
+  { id: 'port-server', position: Position.Left, label: 'Server' },
+  { id: 'port-executor', position: Position.Right, label: 'Executor' },
+] as const
+
+/**
+ * Agent Executor hub — fixed compass ports.
+ * Left LLM · Top Card · Right Thread · Bottom Server
+ */
+export const AGENT_EXECUTOR_PORTS = [
+  { id: 'port-llm', position: Position.Left, label: 'LLM' },
+  { id: 'port-card', position: Position.Top, label: 'Card' },
+  { id: 'port-thread', position: Position.Right, label: 'Thread' },
+  { id: 'port-server', position: Position.Bottom, label: 'Server' },
+] as const
+
+/**
+ * Agent Card — Interfaces left, Skills right, Executor bottom. Nothing on top.
+ */
+export const AGENT_CARD_PORTS = [
+  { id: 'port-interfaces', position: Position.Left, label: 'Interfaces' },
+  { id: 'port-skills', position: Position.Right, label: 'Skills' },
+  { id: 'port-executor', position: Position.Bottom, label: 'Executor' },
 ] as const
 
 export type CardinalPortHandleId = (typeof NODE_PORT_SIDES)[number]['id']
 export type ThreadConfigPortHandleId = (typeof THREAD_CONFIG_PORTS)[number]['id']
-export type PortHandleId = CardinalPortHandleId | ThreadConfigPortHandleId
+export type LlmPortHandleId = (typeof LLM_PORTS)[number]['id']
+export type AgentExecutorPortHandleId = (typeof AGENT_EXECUTOR_PORTS)[number]['id']
+export type AgentCardPortHandleId = (typeof AGENT_CARD_PORTS)[number]['id']
+export type PortHandleId =
+  | CardinalPortHandleId
+  | ThreadConfigPortHandleId
+  | LlmPortHandleId
+  | AgentExecutorPortHandleId
+  | AgentCardPortHandleId
+
+export interface FixedPortDef {
+  id: string
+  position: Position
+  label: string
+}
 
 export interface NodeConnectionProfile {
   type: ValenceNodeType
   portHandleIds: readonly PortHandleId[]
+  fixedPorts?: readonly FixedPortDef[]
 }
+
+const CARDINAL_PROFILE = (type: ValenceNodeType): NodeConnectionProfile => ({
+  type,
+  portHandleIds: NODE_PORT_SIDES.map((side) => side.id),
+})
 
 export const NODE_CONNECTION_PROFILES: Record<
   ValenceNodeType,
@@ -31,20 +77,30 @@ export const NODE_CONNECTION_PROFILES: Record<
 > = {
   llm: {
     type: 'llm',
-    portHandleIds: NODE_PORT_SIDES.map((side) => side.id),
+    portHandleIds: LLM_PORTS.map((port) => port.id),
+    fixedPorts: LLM_PORTS,
   },
-  toolServer: {
-    type: 'toolServer',
-    portHandleIds: NODE_PORT_SIDES.map((side) => side.id),
-  },
-  serverStack: {
-    type: 'serverStack',
-    portHandleIds: NODE_PORT_SIDES.map((side) => side.id),
-  },
+  toolServer: CARDINAL_PROFILE('toolServer'),
+  serverStack: CARDINAL_PROFILE('serverStack'),
   threadConfig: {
     type: 'threadConfig',
-    portHandleIds: THREAD_CONFIG_PORTS.map((side) => side.id),
+    portHandleIds: THREAD_CONFIG_PORTS.map((port) => port.id),
+    fixedPorts: THREAD_CONFIG_PORTS,
   },
+  agentSkill: CARDINAL_PROFILE('agentSkill'),
+  agentInterface: CARDINAL_PROFILE('agentInterface'),
+  agentCard: {
+    type: 'agentCard',
+    portHandleIds: AGENT_CARD_PORTS.map((port) => port.id),
+    fixedPorts: AGENT_CARD_PORTS,
+  },
+  agentExecutor: {
+    type: 'agentExecutor',
+    portHandleIds: AGENT_EXECUTOR_PORTS.map((port) => port.id),
+    fixedPorts: AGENT_EXECUTOR_PORTS,
+  },
+  skillStack: CARDINAL_PROFILE('skillStack'),
+  interfaceStack: CARDINAL_PROFILE('interfaceStack'),
 }
 
 const ALLOWED_PAIRS = new Set<string>([
@@ -52,13 +108,59 @@ const ALLOWED_PAIRS = new Set<string>([
   'toolServer-llm',
   'llm-serverStack',
   'serverStack-llm',
-  'llm-threadConfig',
-  'threadConfig-llm',
+  'llm-agentExecutor',
+  'agentExecutor-llm',
   'toolServer-threadConfig',
   'threadConfig-toolServer',
   'serverStack-threadConfig',
   'threadConfig-serverStack',
+  'toolServer-agentExecutor',
+  'agentExecutor-toolServer',
+  'serverStack-agentExecutor',
+  'agentExecutor-serverStack',
+  'threadConfig-agentExecutor',
+  'agentExecutor-threadConfig',
+  'agentCard-agentExecutor',
+  'agentExecutor-agentCard',
+  'agentSkill-agentCard',
+  'agentCard-agentSkill',
+  'skillStack-agentCard',
+  'agentCard-skillStack',
+  'agentInterface-agentCard',
+  'agentCard-agentInterface',
+  'interfaceStack-agentCard',
+  'agentCard-interfaceStack',
 ])
+
+/** Required fixed-port id on `nodeType` when linking to `peerType`. */
+const REQUIRED_PORT: Partial<
+  Record<ValenceNodeType, Partial<Record<ValenceNodeType, string>>>
+> = {
+  threadConfig: {
+    agentExecutor: 'port-agent',
+    toolServer: 'port-server',
+    serverStack: 'port-server',
+  },
+  llm: {
+    agentExecutor: 'port-executor',
+    toolServer: 'port-server',
+    serverStack: 'port-server',
+  },
+  agentExecutor: {
+    llm: 'port-llm',
+    threadConfig: 'port-thread',
+    agentCard: 'port-card',
+    toolServer: 'port-server',
+    serverStack: 'port-server',
+  },
+  agentCard: {
+    agentExecutor: 'port-executor',
+    agentSkill: 'port-skills',
+    skillStack: 'port-skills',
+    agentInterface: 'port-interfaces',
+    interfaceStack: 'port-interfaces',
+  },
+}
 
 export function getNodeProfile(type: ValenceNodeType | undefined) {
   if (!type) return null
@@ -137,12 +239,84 @@ function countLinksToTypes(
   return count
 }
 
-function countLlmLinksOnStack(
-  stackId: string,
-  nodes: ValenceNode[],
+const SERVER_TYPES: ValenceNodeType[] = ['toolServer', 'serverStack']
+
+export function findLinkedExecutorId(
+  nodeId: string,
   edges: Edge[],
+  nodes: ValenceNode[],
 ) {
-  return countLinksToTypes(stackId, edges, nodes, ['llm'])
+  for (const neighborId of getNeighborIds(nodeId, edges)) {
+    const neighbor = nodes.find((item) => item.id === neighborId)
+    if (neighbor?.type === 'agentExecutor') return neighborId
+  }
+  return null
+}
+
+export function nodeHasServerLink(
+  nodeId: string,
+  edges: Edge[],
+  nodes: ValenceNode[],
+) {
+  return countLinksToTypes(nodeId, edges, nodes, SERVER_TYPES) >= 1
+}
+
+/** True when this LLM/Thread shares an Executor that already owns the server. */
+export function usesExecutorOwnedServer(
+  consumerId: string,
+  edges: Edge[],
+  nodes: ValenceNode[],
+) {
+  const executorId = findLinkedExecutorId(consumerId, edges, nodes)
+  if (!executorId) return false
+  return nodeHasServerLink(executorId, edges, nodes)
+}
+
+function isServerType(type: ValenceNodeType | undefined) {
+  return type === 'toolServer' || type === 'serverStack'
+}
+
+function isServerConsumer(type: ValenceNodeType | undefined) {
+  return type === 'llm' || type === 'threadConfig'
+}
+
+/**
+ * When an Executor owns a server, LLM/Thread linked to it must not keep their
+ * own server edges — they inherit the executor's server.
+ */
+export function pruneConsumerServerEdgesForExecutorOwners(
+  edges: Edge[],
+  nodes: ValenceNode[],
+): Edge[] {
+  const blockedConsumers = new Set<string>()
+
+  for (const node of nodes) {
+    if (node.type !== 'agentExecutor') continue
+    if (!nodeHasServerLink(node.id, edges, nodes)) continue
+
+    for (const neighborId of getNeighborIds(node.id, edges)) {
+      const neighbor = nodes.find((item) => item.id === neighborId)
+      if (isServerConsumer(neighbor?.type)) {
+        blockedConsumers.add(neighborId)
+      }
+    }
+  }
+
+  if (blockedConsumers.size === 0) return edges
+
+  return edges.filter((edge) => {
+    const source = nodes.find((item) => item.id === edge.source)
+    const target = nodes.find((item) => item.id === edge.target)
+    const consumerId = isServerConsumer(source?.type)
+      ? edge.source
+      : isServerConsumer(target?.type)
+        ? edge.target
+        : null
+    if (!consumerId || !blockedConsumers.has(consumerId)) return true
+
+    const peerType = consumerId === edge.source ? target?.type : source?.type
+    return !isServerType(peerType)
+  })
 }
 
 function isAllowedPair(
@@ -152,23 +326,45 @@ function isAllowedPair(
   return ALLOWED_PAIRS.has(`${sourceType}-${targetType}`)
 }
 
-function threadHandleForPeer(
+function handleForNode(
   connection: Connection | Edge,
-  threadId: string,
-): ThreadConfigPortHandleId | null {
-  if (connection.source === threadId) {
-    return (connection.sourceHandle as ThreadConfigPortHandleId) ?? null
+  nodeId: string,
+): string | null {
+  if (connection.source === nodeId) {
+    return connection.sourceHandle ?? null
   }
-  if (connection.target === threadId) {
-    return (connection.targetHandle as ThreadConfigPortHandleId) ?? null
+  if (connection.target === nodeId) {
+    return connection.targetHandle ?? null
   }
   return null
+}
+
+function portMatchesPeer(
+  nodeType: ValenceNodeType,
+  peerType: ValenceNodeType,
+  handle: string | null,
+) {
+  const required = REQUIRED_PORT[nodeType]?.[peerType]
+  if (!required) return true
+  if (!handle) return false
+  return handle === required
+}
+
+function hasStackId(
+  node: ValenceNode,
+): node is ValenceNode & { data: { stackId?: string } } {
+  return (
+    node.type === 'toolServer' ||
+    node.type === 'agentSkill' ||
+    node.type === 'agentInterface'
+  )
 }
 
 export function isValidWorkflowConnection(
   connection: Connection | Edge,
   nodes: ValenceNode[],
   edges: Edge[],
+  workspaceType: 'agent-executor' | 'a2a' = 'agent-executor',
 ): boolean {
   const source = connection.source
   const target = connection.target
@@ -182,6 +378,14 @@ export function isValidWorkflowConnection(
 
   const sourceType = sourceNode.type as ValenceNodeType
   const targetType = targetNode.type as ValenceNodeType
+
+  // A2A workspace — only Agent Executor ↔ Agent Executor
+  if (workspaceType === 'a2a') {
+    if (sourceType !== 'agentExecutor' || targetType !== 'agentExecutor') {
+      return false
+    }
+    return true
+  }
 
   const sourceProfile = getNodeProfile(sourceType)
   const targetProfile = getNodeProfile(targetType)
@@ -197,19 +401,30 @@ export function isValidWorkflowConnection(
     return false
   }
 
-  // ── Thread Config: max 2 links, 1 agent + 1 server, fixed ports ──
+  if (hasStackId(sourceNode) && sourceNode.data.stackId) return false
+  if (hasStackId(targetNode) && targetNode.data.stackId) return false
+
+  const sourceHandle = handleForNode(connection, source)
+  const targetHandle = handleForNode(connection, target)
+
+  if (!portMatchesPeer(sourceType, targetType, sourceHandle)) return false
+  if (!portMatchesPeer(targetType, sourceType, targetHandle)) return false
+
+  // ── Thread Config: Executor + Server only (never LLM) ──
   if (sourceType === 'threadConfig' || targetType === 'threadConfig') {
     const threadId = sourceType === 'threadConfig' ? source : target
     const peerType = sourceType === 'threadConfig' ? targetType : sourceType
-    const handle = threadHandleForPeer(connection, threadId)
+
+    if (peerType === 'llm') return false
 
     if (countNodeConnections(edges, threadId) >= 2) return false
 
-    if (peerType === 'llm') {
-      if (handle && handle !== 'port-agent') return false
-      if (countLinksToTypes(threadId, edges, nodes, ['llm']) >= 1) return false
+    if (peerType === 'agentExecutor') {
+      if (countLinksToTypes(threadId, edges, nodes, ['agentExecutor']) >= 1) {
+        return false
+      }
     } else if (peerType === 'toolServer' || peerType === 'serverStack') {
-      if (handle && handle !== 'port-server') return false
+      if (usesExecutorOwnedServer(threadId, edges, nodes)) return false
       if (
         countLinksToTypes(threadId, edges, nodes, [
           'toolServer',
@@ -223,6 +438,7 @@ export function isValidWorkflowConnection(
     }
   }
 
+  // ── LLM: Executor + Server only ──
   if (sourceType === 'llm' || targetType === 'llm') {
     const llmId = sourceType === 'llm' ? source : target
     const otherType = sourceType === 'llm' ? targetType : sourceType
@@ -230,12 +446,15 @@ export function isValidWorkflowConnection(
     if (
       otherType !== 'toolServer' &&
       otherType !== 'serverStack' &&
-      otherType !== 'threadConfig'
+      otherType !== 'agentExecutor'
     ) {
       return false
     }
 
+    if (countNodeConnections(edges, llmId) >= 2) return false
+
     if (otherType === 'toolServer' || otherType === 'serverStack') {
+      if (usesExecutorOwnedServer(llmId, edges, nodes)) return false
       if (
         countLinksToTypes(llmId, edges, nodes, ['toolServer', 'serverStack']) >=
         1
@@ -244,34 +463,105 @@ export function isValidWorkflowConnection(
       }
     }
 
-    if (otherType === 'threadConfig') {
-      if (countLinksToTypes(llmId, edges, nodes, ['threadConfig']) >= 1) {
+    if (otherType === 'agentExecutor') {
+      if (countLinksToTypes(llmId, edges, nodes, ['agentExecutor']) >= 1) {
         return false
       }
     }
+  }
 
-    if (otherType === 'serverStack') {
-      const stackId = sourceType === 'serverStack' ? source : target
-      if (countLlmLinksOnStack(stackId, nodes, edges) >= 1) return false
+  // ── Agent Executor hub (max 4 links, one per role) ──
+  if (sourceType === 'agentExecutor' || targetType === 'agentExecutor') {
+    const executorId =
+      sourceType === 'agentExecutor' ? source : target
+    const otherType =
+      sourceType === 'agentExecutor' ? targetType : sourceType
+
+    if (countNodeConnections(edges, executorId) >= 4) return false
+
+    if (otherType === 'llm') {
+      if (countLinksToTypes(executorId, edges, nodes, ['llm']) >= 1) {
+        return false
+      }
+    } else if (otherType === 'threadConfig') {
+      if (
+        countLinksToTypes(executorId, edges, nodes, ['threadConfig']) >= 1
+      ) {
+        return false
+      }
+    } else if (otherType === 'agentCard') {
+      if (countLinksToTypes(executorId, edges, nodes, ['agentCard']) >= 1) {
+        return false
+      }
+    } else if (otherType === 'toolServer' || otherType === 'serverStack') {
+      if (
+        countLinksToTypes(executorId, edges, nodes, [
+          'toolServer',
+          'serverStack',
+        ]) >= 1
+      ) {
+        return false
+      }
     }
   }
 
+  // ── Agent Card composition ──
+  if (sourceType === 'agentCard' || targetType === 'agentCard') {
+    const cardId = sourceType === 'agentCard' ? source : target
+    const otherType = sourceType === 'agentCard' ? targetType : sourceType
+
+    if (otherType === 'agentExecutor') {
+      if (countLinksToTypes(cardId, edges, nodes, ['agentExecutor']) >= 1) {
+        return false
+      }
+    } else if (otherType === 'agentSkill') {
+      if (countLinksToTypes(cardId, edges, nodes, ['skillStack']) >= 1) {
+        return false
+      }
+    } else if (otherType === 'skillStack') {
+      if (
+        countLinksToTypes(cardId, edges, nodes, ['agentSkill', 'skillStack']) >=
+        1
+      ) {
+        return false
+      }
+    } else if (otherType === 'agentInterface') {
+      if (countLinksToTypes(cardId, edges, nodes, ['interfaceStack']) >= 1) {
+        return false
+      }
+    } else if (otherType === 'interfaceStack') {
+      if (
+        countLinksToTypes(cardId, edges, nodes, [
+          'agentInterface',
+          'interfaceStack',
+        ]) >= 1
+      ) {
+        return false
+      }
+    }
+  }
+
+  // ── Tool server / MCP stack: LLM + Thread + Executor (max 3, one each) ──
   if (sourceType === 'toolServer' || targetType === 'toolServer') {
     const toolServerId = sourceType === 'toolServer' ? source : target
     const otherType = sourceType === 'toolServer' ? targetType : sourceType
-    const toolServer = nodes.find(
-      (node): node is ValenceNode & { type: 'toolServer' } =>
-        node.id === toolServerId && node.type === 'toolServer',
-    )
-    if (toolServer?.data.stackId) return false
 
-    // Tool server: one LLM + one Thread Config max
+    if (countNodeConnections(edges, toolServerId) >= 3) return false
+
     if (otherType === 'llm') {
       if (countLinksToTypes(toolServerId, edges, nodes, ['llm']) >= 1) {
         return false
       }
     } else if (otherType === 'threadConfig') {
-      if (countLinksToTypes(toolServerId, edges, nodes, ['threadConfig']) >= 1) {
+      if (
+        countLinksToTypes(toolServerId, edges, nodes, ['threadConfig']) >= 1
+      ) {
+        return false
+      }
+    } else if (otherType === 'agentExecutor') {
+      if (
+        countLinksToTypes(toolServerId, edges, nodes, ['agentExecutor']) >= 1
+      ) {
         return false
       }
     } else {
@@ -283,10 +573,38 @@ export function isValidWorkflowConnection(
     const stackId = sourceType === 'serverStack' ? source : target
     const otherType = sourceType === 'serverStack' ? targetType : sourceType
 
+    if (countNodeConnections(edges, stackId) >= 3) return false
+
     if (otherType === 'llm') {
-      if (countLlmLinksOnStack(stackId, nodes, edges) >= 1) return false
+      if (countLinksToTypes(stackId, edges, nodes, ['llm']) >= 1) return false
     } else if (otherType === 'threadConfig') {
       if (countLinksToTypes(stackId, edges, nodes, ['threadConfig']) >= 1) {
+        return false
+      }
+    } else if (otherType === 'agentExecutor') {
+      if (countLinksToTypes(stackId, edges, nodes, ['agentExecutor']) >= 1) {
+        return false
+      }
+    } else {
+      return false
+    }
+  }
+
+  if (sourceType === 'skillStack' || targetType === 'skillStack') {
+    const stackId = sourceType === 'skillStack' ? source : target
+    const otherType = sourceType === 'skillStack' ? targetType : sourceType
+    if (otherType === 'agentCard') {
+      if (countLinksToTypes(stackId, edges, nodes, ['agentCard']) >= 1) {
+        return false
+      }
+    }
+  }
+
+  if (sourceType === 'interfaceStack' || targetType === 'interfaceStack') {
+    const stackId = sourceType === 'interfaceStack' ? source : target
+    const otherType = sourceType === 'interfaceStack' ? targetType : sourceType
+    if (otherType === 'agentCard') {
+      if (countLinksToTypes(stackId, edges, nodes, ['agentCard']) >= 1) {
         return false
       }
     }

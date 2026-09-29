@@ -128,8 +128,11 @@ export function ThreadConfigPanel() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const { data: configs = [], isLoading, isError } = useThreadConfigs()
-  const { data: editingConfig, isLoading: isLoadingEditConfig } =
-    useThreadConfig(editingConfigId ?? '')
+  const {
+    data: editingConfig,
+    isLoading: isLoadingEditConfig,
+    isError: isEditError,
+  } = useThreadConfig(editingConfigId ?? '')
   const deleteConfig = useDeleteThreadConfig()
 
   const isOpen = Boolean(threadConfigModalNodeId)
@@ -225,10 +228,14 @@ export function ThreadConfigPanel() {
           onCancel={() => setMode('pick')}
         />
       ) : mode === 'edit' && editingConfigId ? (
-        isLoadingEditConfig || !editingConfig ? (
+        isLoadingEditConfig ? (
           <div className="flex items-center justify-center py-10 text-panel-muted">
             <Loader2 className="size-4 animate-spin" />
           </div>
+        ) : isEditError || !editingConfig ? (
+          <p className="px-1 py-2 text-xs leading-snug text-destructive">
+            Could not load thread config.
+          </p>
         ) : (
           <CreateThreadConfigForm
             initialConfig={editingConfig}

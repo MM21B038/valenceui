@@ -65,6 +65,25 @@ export type ComponentColorTarget =
   | 'toolServer'
   | 'threadConfig'
   | 'serverStack'
+  | 'agentSkill'
+  | 'agentInterface'
+  | 'agentCard'
+  | 'agentExecutor'
+  | 'skillStack'
+  | 'interfaceStack'
+
+export const COMPONENT_COLOR_TARGETS: ComponentColorTarget[] = [
+  'llm',
+  'toolServer',
+  'threadConfig',
+  'serverStack',
+  'agentSkill',
+  'agentInterface',
+  'agentCard',
+  'agentExecutor',
+  'skillStack',
+  'interfaceStack',
+]
 
 export type ComponentColorsMap = Partial<
   Record<ComponentColorTarget, BrandColors>
@@ -171,17 +190,11 @@ export function parseStoredTheme(
 
     if (parsed.componentColors && typeof parsed.componentColors === 'object') {
       const componentColors: ComponentColorsMap = {}
-      if (isBrandColors(parsed.componentColors.llm)) {
-        componentColors.llm = parsed.componentColors.llm
-      }
-      if (isBrandColors(parsed.componentColors.toolServer)) {
-        componentColors.toolServer = parsed.componentColors.toolServer
-      }
-      if (isBrandColors(parsed.componentColors.threadConfig)) {
-        componentColors.threadConfig = parsed.componentColors.threadConfig
-      }
-      if (isBrandColors(parsed.componentColors.serverStack)) {
-        componentColors.serverStack = parsed.componentColors.serverStack
+      for (const target of COMPONENT_COLOR_TARGETS) {
+        const colors = parsed.componentColors[target]
+        if (isBrandColors(colors)) {
+          componentColors[target] = colors
+        }
       }
       if (Object.keys(componentColors).length > 0) {
         settings.componentColors = componentColors
@@ -190,17 +203,11 @@ export function parseStoredTheme(
 
     if (parsed.componentGradients && typeof parsed.componentGradients === 'object') {
       const componentGradients: ComponentGradientsMap = {}
-      if (typeof parsed.componentGradients.llm === 'string') {
-        componentGradients.llm = parsed.componentGradients.llm
-      }
-      if (typeof parsed.componentGradients.toolServer === 'string') {
-        componentGradients.toolServer = parsed.componentGradients.toolServer
-      }
-      if (typeof parsed.componentGradients.threadConfig === 'string') {
-        componentGradients.threadConfig = parsed.componentGradients.threadConfig
-      }
-      if (typeof parsed.componentGradients.serverStack === 'string') {
-        componentGradients.serverStack = parsed.componentGradients.serverStack
+      for (const target of COMPONENT_COLOR_TARGETS) {
+        const gradient = parsed.componentGradients[target]
+        if (typeof gradient === 'string') {
+          componentGradients[target] = gradient
+        }
       }
       if (Object.keys(componentGradients).length > 0) {
         settings.componentGradients = componentGradients

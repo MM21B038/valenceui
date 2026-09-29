@@ -1,6 +1,22 @@
-import { BrainCircuit, MessagesSquare, Server, type LucideIcon } from 'lucide-react'
+import {
+  Bot,
+  BrainCircuit,
+  CreditCard,
+  MessagesSquare,
+  Network,
+  Server,
+  Sparkles,
+  type LucideIcon,
+} from 'lucide-react'
 
-export type ComponentType = 'llm' | 'toolServer' | 'threadConfig'
+export type ComponentType =
+  | 'llm'
+  | 'toolServer'
+  | 'threadConfig'
+  | 'agentSkill'
+  | 'agentInterface'
+  | 'agentCard'
+  | 'agentExecutor'
 
 export interface PaletteComponent {
   type: ComponentType
@@ -27,6 +43,30 @@ export const PALETTE_COMPONENTS: PaletteComponent[] = [
     label: 'Thread Config',
     description: 'Thread prompts, limits & hide rules',
     icon: MessagesSquare,
+  },
+  {
+    type: 'agentSkill',
+    label: 'Agent Skill',
+    description: 'A2A discovery skill',
+    icon: Sparkles,
+  },
+  {
+    type: 'agentInterface',
+    label: 'Agent Interface',
+    description: 'A2A transport interface',
+    icon: Network,
+  },
+  {
+    type: 'agentCard',
+    label: 'Agent Card',
+    description: 'A2A agent card',
+    icon: CreditCard,
+  },
+  {
+    type: 'agentExecutor',
+    label: 'Agent Executor',
+    description: 'Runnable agent executor',
+    icon: Bot,
   },
 ]
 

@@ -4,29 +4,49 @@ import {
   Controls,
   MiniMap,
   ReactFlow,
+  type EdgeTypes,
   type IsValidConnection,
   type OnMove,
   type OnNodeDrag,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 
-import { getStackIdForToolServerNode } from '@/lib/canvas/stack-dump'
+import { getStackIdAtPoint } from '@/lib/canvas/stack-dump'
 import type { ValenceNode } from '@/lib/types/workflow'
 
 import { CanvasStructureBar } from '@/features/canvas/canvas-structure-bar'
+import {
+  ValenceFlowConnectionLine,
+  ValenceFlowEdge,
+} from '@/features/canvas/edges/valence-flow-edge'
 import { nodeTypes } from '@/features/canvas/nodes'
 import { isValidWorkflowConnection } from '@/lib/canvas/connection-rules'
 import { useWorkflowStore } from '@/stores/workflow-store'
 
+const edgeTypes: EdgeTypes = {
+  valenceFlow: ValenceFlowEdge,
+  default: ValenceFlowEdge,
+}
+
 const defaultEdgeOptions = {
-  animated: true,
-  style: { strokeWidth: 2, stroke: 'var(--connector)' },
+  type: 'valenceFlow',
+  animated: false,
 }
 
 export function WorkflowCanvas() {
   const nodes = useWorkflowStore((state) => state.nodes)
-  const edges = useWorkflowStore((state) => state.edges)
+  const rawEdges = useWorkflowStore((state) => state.edges)
+  const workspaceType = useWorkflowStore((state) => state.workspaceType)
+  const edges = useMemo(
+    () =>
+      rawEdges.map((edge) =>
+        edge.type === 'valenceFlow'
+          ? edge
+          : { ...edge, type: 'valenceFlow' as const },
+      ),
+    [rawEdges],
+  )
   const viewport = useWorkflowStore((state) => state.viewport)
   const onNodesChange = useWorkflowStore((state) => state.onNodesChange)
   const onEdgesChange = useWorkflowStore((state) => state.onEdgesChange)
@@ -34,10 +54,15 @@ export function WorkflowCanvas() {
   const setViewport = useWorkflowStore((state) => state.setViewport)
   const onNodesDelete = useWorkflowStore((state) => state.onNodesDelete)
   const dumpServerIntoStack = useWorkflowStore((state) => state.dumpServerIntoStack)
+  const dumpSkillIntoStack = useWorkflowStore((state) => state.dumpSkillIntoStack)
+  const dumpInterfaceIntoStack = useWorkflowStore(
+    (state) => state.dumpInterfaceIntoStack,
+  )
 
   const isValidConnection: IsValidConnection = useCallback(
-    (connection) => isValidWorkflowConnection(connection, nodes, edges),
-    [nodes, edges],
+    (connection) =>
+      isValidWorkflowConnection(connection, nodes, edges, workspaceType),
+    [nodes, edges, workspaceType],
   )
 
   const handleMoveEnd: OnMove = useCallback(
@@ -49,14 +74,47 @@ export function WorkflowCanvas() {
 
   const handleNodeDragStop: OnNodeDrag<ValenceNode> = useCallback(
     (_event, node) => {
-      if (node.type !== 'toolServer' || node.data.stackId) return
+      if ('stackId' in node.data && node.data.stackId) return
 
-      const stackId = getStackIdForToolServerNode(node, nodes)
-      if (!stackId) return
+      if (node.type === 'toolServer') {
+        const stackId = getStackIdAtPoint(
+          {
+            x: node.position.x + 66,
+            y: node.position.y + 56,
+          },
+          nodes,
+          'serverStack',
+        )
+        if (stackId) dumpServerIntoStack(node.id, stackId)
+        return
+      }
 
-      dumpServerIntoStack(node.id, stackId)
+      if (node.type === 'agentSkill') {
+        const stackId = getStackIdAtPoint(
+          {
+            x: node.position.x + 66,
+            y: node.position.y + 56,
+          },
+          nodes,
+          'skillStack',
+        )
+        if (stackId) dumpSkillIntoStack(node.id, stackId)
+        return
+      }
+
+      if (node.type === 'agentInterface') {
+        const stackId = getStackIdAtPoint(
+          {
+            x: node.position.x + 66,
+            y: node.position.y + 56,
+          },
+          nodes,
+          'interfaceStack',
+        )
+        if (stackId) dumpInterfaceIntoStack(node.id, stackId)
+      }
     },
-    [dumpServerIntoStack, nodes],
+    [dumpInterfaceIntoStack, dumpServerIntoStack, dumpSkillIntoStack, nodes],
   )
 
   return (
@@ -76,7 +134,9 @@ export function WorkflowCanvas() {
         onNodeDragStop={handleNodeDragStop}
         onNodesDelete={(deleted) => onNodesDelete(deleted.map((node) => node.id))}
         deleteKeyCode={['Backspace', 'Delete']}
+        edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
+        connectionLineComponent={ValenceFlowConnectionLine}
         proOptions={{ hideAttribution: true }}
         className="bg-transparent"
       >
@@ -86,9 +146,17 @@ export function WorkflowCanvas() {
           size={1}
           color="var(--workspace-dot)"
         />
-        <Controls showInteractive={false} />
-        <MiniMap pannable zoomable className="!border-border !bg-node/90" />
-        <CanvasStructureBar />
+        <Controls
+          showInteractive={false}
+          position="bottom-right"
+          className="!bottom-[168px] !right-3 !m-0 overflow-hidden !rounded-xl !border !border-panel-border !bg-panel/95 !shadow-lg !backdrop-blur-sm"
+        />
+        <MiniMap
+          pannable
+          zoomable
+          className="!bottom-3 !right-3 !m-0 !rounded-xl !border !border-panel-border !bg-node/90 !shadow-lg"
+        />
+        {workspaceType === 'agent-executor' ? <CanvasStructureBar /> : null}
       </ReactFlow>
     </div>
   )

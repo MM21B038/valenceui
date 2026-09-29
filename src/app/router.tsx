@@ -10,6 +10,7 @@ export function AppRouter() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/editor" element={<EditorPage />} />
+        <Route path="/editor/:workspaceId" element={<EditorPage />} />
         <Route path="/prompts" element={<PromptsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

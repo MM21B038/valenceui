@@ -170,8 +170,11 @@ export function ToolServerConfigPanel() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const { data: configs = [], isLoading, isError } = useMcpServerConfigs()
-  const { data: editingConfig, isLoading: isLoadingEditConfig } =
-    useMcpServerConfig(editingConfigId ?? '')
+  const {
+    data: editingConfig,
+    isLoading: isLoadingEditConfig,
+    isError: isEditError,
+  } = useMcpServerConfig(editingConfigId ?? '')
   const deleteConfig = useDeleteMcpServerConfig()
 
   const isOpen = Boolean(toolServerModalNodeId)
@@ -276,10 +279,14 @@ export function ToolServerConfigPanel() {
               onCancel={() => setMode('pick')}
             />
           ) : mode === 'edit' && editingConfigId ? (
-            isLoadingEditConfig || !editingConfig ? (
+            isLoadingEditConfig ? (
               <div className="flex items-center justify-center py-10 text-panel-muted">
                 <Loader2 className="size-4 animate-spin" />
               </div>
+            ) : isEditError || !editingConfig ? (
+              <p className="px-1 py-2 text-xs leading-snug text-destructive @md/inspector:text-sm">
+                Could not load tool server.
+              </p>
             ) : (
               <CreateToolServerConfigForm
                 initialConfig={editingConfig}

@@ -2,19 +2,24 @@ import type { CSSProperties } from 'react'
 
 import type { ThemedComponentType } from '@/lib/theme/derive-component-tokens'
 
+const CSS_PREFIX: Record<ThemedComponentType, string> = {
+  llm: 'llm',
+  toolServer: 'tool-server',
+  threadConfig: 'thread-config',
+  serverStack: 'server-stack',
+  agentSkill: 'agent-skill',
+  agentInterface: 'agent-interface',
+  agentCard: 'agent-card',
+  agentExecutor: 'agent-executor',
+  skillStack: 'skill-stack',
+  interfaceStack: 'interface-stack',
+}
+
 export function componentVar(
   type: ThemedComponentType,
   token: string,
 ): string {
-  const prefix =
-    type === 'llm'
-      ? 'llm'
-      : type === 'toolServer'
-        ? 'tool-server'
-        : type === 'threadConfig'
-          ? 'thread-config'
-          : 'server-stack'
-  return `var(--${prefix}-${token})`
+  return `var(--${CSS_PREFIX[type]}-${token})`
 }
 
 export function componentSurfaceStyle(type: ThemedComponentType): CSSProperties {
@@ -35,8 +40,31 @@ export function componentPaintBorderStyle(
   const to = componentVar(type, 'icon-to')
 
   return {
-    background: `linear-gradient(${surface}, ${surface}) padding-box, linear-gradient(135deg, ${from}, ${to}) border-box`,
+    backgroundImage: `linear-gradient(${surface}, ${surface}), linear-gradient(135deg, ${from}, ${to})`,
+    backgroundOrigin: 'padding-box, border-box',
+    backgroundClip: 'padding-box, border-box',
     border: '2px solid transparent',
+  }
+}
+
+/** Surface + border for palette/rail/nodes — avoids background/backgroundColor clashes. */
+export function componentBlockChromeStyle(
+  type: ThemedComponentType,
+  options: { selected?: boolean; hasPaint?: boolean; hovered?: boolean } = {},
+): CSSProperties {
+  const { selected = false, hasPaint = false, hovered = false } = options
+
+  if (selected) {
+    return componentSelectedRingStyle(type)
+  }
+
+  if (hasPaint || hovered) {
+    return componentPaintBorderStyle(type)
+  }
+
+  return {
+    ...componentSurfaceStyle(type),
+    ...componentBorderMutedStyle(type),
   }
 }
 

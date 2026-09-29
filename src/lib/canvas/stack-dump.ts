@@ -26,9 +26,10 @@ export function isPointInsideStack(
 export function getStackIdAtPoint(
   point: { x: number; y: number },
   nodes: ValenceNode[],
+  stackType: 'serverStack' | 'skillStack' | 'interfaceStack' = 'serverStack',
 ) {
   for (const node of nodes) {
-    if (node.type !== 'serverStack') continue
+    if (node.type !== stackType) continue
     if (isPointInsideStack(point, node.position)) return node.id
   }
   return null
@@ -42,7 +43,7 @@ export function getStackIdForToolServerNode(
     x: node.position.x + TOOL_SERVER_NODE_WIDTH / 2,
     y: node.position.y + TOOL_SERVER_NODE_HEIGHT / 2,
   }
-  return getStackIdAtPoint(center, nodes)
+  return getStackIdAtPoint(center, nodes, 'serverStack')
 }
 
 export function getDumpedToolServers(
@@ -58,5 +59,34 @@ export function getDumpedToolServers(
     .filter(
       (node): node is ValenceNode & { type: 'toolServer' } =>
         node?.type === 'toolServer',
+    )
+}
+
+export function getDumpedAgentSkills(stackId: string, nodes: ValenceNode[]) {
+  const stack = nodes.find((node) => node.id === stackId)
+  const memberIds =
+    stack?.type === 'skillStack' ? stack.data.memberIds ?? [] : []
+
+  return memberIds
+    .map((memberId) => nodes.find((node) => node.id === memberId))
+    .filter(
+      (node): node is ValenceNode & { type: 'agentSkill' } =>
+        node?.type === 'agentSkill',
+    )
+}
+
+export function getDumpedAgentInterfaces(
+  stackId: string,
+  nodes: ValenceNode[],
+) {
+  const stack = nodes.find((node) => node.id === stackId)
+  const memberIds =
+    stack?.type === 'interfaceStack' ? stack.data.memberIds ?? [] : []
+
+  return memberIds
+    .map((memberId) => nodes.find((node) => node.id === memberId))
+    .filter(
+      (node): node is ValenceNode & { type: 'agentInterface' } =>
+        node?.type === 'agentInterface',
     )
 }

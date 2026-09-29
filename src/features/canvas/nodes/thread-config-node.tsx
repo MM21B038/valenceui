@@ -1,49 +1,22 @@
 import { type NodeProps } from '@xyflow/react'
-import { BrainCircuit, MessagesSquare, Server } from 'lucide-react'
+import { Bot, MessagesSquare, Server } from 'lucide-react'
 
 import { usePaintMode } from '@/components/theme/paint-mode-provider'
 import { useTheme } from '@/components/theme/theme-provider'
 import { NodeHoverActions } from '@/features/canvas/nodes/node-hover-actions'
+import { RoleBadge } from '@/features/canvas/nodes/fixed-role-ports'
 import {
   ThreadConfigPorts,
   useThreadConfigPortState,
 } from '@/features/canvas/nodes/thread-config-ports'
 import type { ThreadConfigNodeData } from '@/lib/types/thread-config'
 import {
-  componentBorderMutedStyle,
+  componentBlockChromeStyle,
   componentIconGradientStyle,
-  componentPaintBorderStyle,
-  componentSelectedRingStyle,
-  componentSurfaceStyle,
   componentVar,
 } from '@/lib/theme/component-block-styles'
 import { useWorkflowStore } from '@/stores/workflow-store'
 import { cn } from '@/lib/utils'
-
-function RoleBadge({
-  label,
-  active,
-  children,
-}: {
-  label: string
-  active: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <div
-      title={label}
-      aria-label={label}
-      className={cn(
-        'flex size-7 shrink-0 items-center justify-center rounded-lg border transition-colors',
-        active
-          ? 'border-connector bg-connector/20 text-connector'
-          : 'border-panel-border/70 bg-panel-inspector/35 text-panel-muted',
-      )}
-    >
-      {children}
-    </div>
-  )
-}
 
 export function ThreadConfigNode({ id, data, selected }: NodeProps) {
   const nodeData = data as ThreadConfigNodeData
@@ -55,7 +28,8 @@ export function ThreadConfigNode({ id, data, selected }: NodeProps) {
 
   const { componentGradients } = useTheme()
   const { isPaintMode, hoverTarget, applyToComponent } = usePaintMode()
-  const { agentConnected, serverConnected } = useThreadConfigPortState(id)
+  const { agentConnected, serverConnected, serverOwnedByExecutor } =
+    useThreadConfigPortState(id)
   const hasPaint = Boolean(componentGradients.threadConfig)
   const hasConfig = Boolean(nodeData.configId && nodeData.name)
 
@@ -81,7 +55,10 @@ export function ThreadConfigNode({ id, data, selected }: NodeProps) {
     <div className="group/node relative h-[72px] w-[240px]">
       <div className="absolute -inset-8 z-0" aria-hidden />
 
-      <ThreadConfigPorts nodeId={id} />
+      <ThreadConfigPorts
+        nodeId={id}
+        hideServer={serverOwnedByExecutor}
+      />
 
       <NodeHoverActions
         onDuplicate={handleDuplicate}
@@ -99,14 +76,10 @@ export function ThreadConfigNode({ id, data, selected }: NodeProps) {
             handleOpenConfig()
           }
         }}
-        style={{
-          ...componentSurfaceStyle('threadConfig'),
-          ...(selected
-            ? componentSelectedRingStyle('threadConfig')
-            : hasPaint
-              ? componentPaintBorderStyle('threadConfig')
-              : componentBorderMutedStyle('threadConfig')),
-        }}
+        style={componentBlockChromeStyle('threadConfig', {
+          selected: Boolean(selected),
+          hasPaint,
+        })}
         className={cn(
           'paint-mode-target relative z-10 flex size-full items-center gap-1.5 overflow-hidden rounded-[1.75rem] px-3.5 py-2 shadow-md transition-all duration-150',
           !hasPaint && !selected && 'border-2',
@@ -115,8 +88,8 @@ export function ThreadConfigNode({ id, data, selected }: NodeProps) {
           hoverTarget === 'threadConfig' && 'paint-drop-target',
         )}
       >
-        <RoleBadge label="Agent" active={agentConnected}>
-          <BrainCircuit className="size-3.5" strokeWidth={2.25} />
+        <RoleBadge label="Executor" active={agentConnected}>
+          <Bot className="size-3.5" strokeWidth={2.25} />
         </RoleBadge>
 
         <div
@@ -154,13 +127,19 @@ export function ThreadConfigNode({ id, data, selected }: NodeProps) {
                 className="truncate text-[9px] leading-tight"
                 style={{ color: componentVar('threadConfig', 'muted') }}
               >
-                {isPaintMode ? 'Drop to paint' : 'Tap to configure'}
+                {isPaintMode ? 'Drop to paint' : 'Executor · Server'}
               </p>
             </>
           )}
         </div>
 
-        <RoleBadge label="Server" active={serverConnected}>
+        <RoleBadge
+          label="Server"
+          active={serverConnected || serverOwnedByExecutor}
+          title={
+            serverOwnedByExecutor ? 'Server (via Executor)' : 'Server'
+          }
+        >
           <Server className="size-3.5" strokeWidth={2.25} />
         </RoleBadge>
       </div>

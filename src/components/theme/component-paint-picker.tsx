@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { usePaintMode } from '@/components/theme/paint-mode-provider'
 import {
@@ -9,7 +9,7 @@ import {
 } from '@/lib/theme/paint-palette'
 import { cn } from '@/lib/utils'
 
-const DISC_SIZE = 300
+const DISC_SIZE = 460
 const CENTER = DISC_SIZE / 2
 
 const FILTERS: { id: PaintSwatchFilter; label: string }[] = [
@@ -74,8 +74,9 @@ function PaintSwatchButton({
       aria-pressed={selected}
       title="Press & drag to paint"
       className={cn(
-        'absolute touch-none rounded-full border-2 border-white/90 shadow-sm transition-transform hover:z-10 hover:scale-125 active:scale-110',
-        selected && 'z-20 scale-125 ring-2 ring-foreground ring-offset-1 ring-offset-popover',
+        'absolute touch-none rounded-full border border-white/80 shadow-sm transition-transform hover:z-10 hover:scale-125 active:scale-110',
+        selected &&
+          'z-20 scale-125 ring-2 ring-foreground ring-offset-1 ring-offset-popover',
       )}
       style={{
         left: x,
@@ -93,14 +94,14 @@ export function ComponentPaintPicker({
   className,
 }: ComponentPaintPickerProps) {
   const [filter, setFilter] = useState<PaintSwatchFilter>('all')
-  const rings = getPaintRings(filter)
+  const rings = useMemo(() => getPaintRings(filter), [filter])
   const visibleCount = rings.reduce(
     (total, ring) => total + ring.swatches.length,
     0,
   )
 
   return (
-    <div className={cn('flex flex-col gap-3', className)}>
+    <div className={cn('flex flex-col gap-2.5', className)}>
       <div className="flex gap-1 rounded-lg bg-muted/50 p-1">
         {FILTERS.map(({ id, label }) => (
           <button
@@ -108,7 +109,7 @@ export function ComponentPaintPicker({
             type="button"
             onClick={() => setFilter(id)}
             className={cn(
-              'flex-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors',
+              'flex-1 rounded-md px-2 py-1.5 text-[10px] font-medium transition-colors',
               filter === id
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
@@ -119,30 +120,29 @@ export function ComponentPaintPicker({
         ))}
       </div>
 
-      <p className="text-center text-[9px] text-muted-foreground">
-        Press a swatch and drag to a block — release elsewhere to cancel
-      </p>
-
       <div
         className="relative mx-auto rounded-full border border-border/60 bg-muted/30"
         style={{ width: DISC_SIZE, height: DISC_SIZE }}
         role="listbox"
         aria-label="Paint colors and gradients"
       >
-        {[52, 96, 140].map((inset) => (
+        {[40, 80, 120, 160].map((inset) => (
           <div
             key={inset}
-            className="pointer-events-none absolute rounded-full border border-border/25"
-            style={{ inset: `${inset / 6}%` }}
+            className="pointer-events-none absolute rounded-full border border-border/20"
+            style={{ inset: `${inset / 8}%` }}
             aria-hidden
           />
         ))}
 
         {rings.map((ring) =>
           ring.swatches.map((swatch, index) => {
-            const angle = (index / ring.swatches.length) * Math.PI * 2 - Math.PI / 2
-            const x = CENTER + Math.cos(angle) * ring.radius - ring.swatchSize / 2
-            const y = CENTER + Math.sin(angle) * ring.radius - ring.swatchSize / 2
+            const angle =
+              (index / ring.swatches.length) * Math.PI * 2 - Math.PI / 2
+            const x =
+              CENTER + Math.cos(angle) * ring.radius - ring.swatchSize / 2
+            const y =
+              CENTER + Math.sin(angle) * ring.radius - ring.swatchSize / 2
 
             return (
               <PaintSwatchButton
@@ -158,11 +158,11 @@ export function ComponentPaintPicker({
         )}
 
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-[10px] font-semibold text-foreground">
+          <div className="rounded-full bg-panel/80 px-2.5 py-1 text-center shadow-sm backdrop-blur-sm">
+            <p className="text-[11px] font-semibold tabular-nums text-foreground">
               {visibleCount}
             </p>
-            <p className="text-[8px] text-muted-foreground">colors</p>
+            <p className="text-[8px] text-muted-foreground">swatches</p>
           </div>
         </div>
       </div>

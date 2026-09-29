@@ -1,26 +1,21 @@
 import { useReactFlow } from '@xyflow/react'
-import { Layers } from 'lucide-react'
+import { Layers, Network, Sparkles } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useWorkflowStore } from '@/stores/workflow-store'
 
 export function CanvasStructureBar() {
   const addServerStack = useWorkflowStore((state) => state.addServerStack)
+  const addSkillStack = useWorkflowStore((state) => state.addSkillStack)
+  const addInterfaceStack = useWorkflowStore((state) => state.addInterfaceStack)
   const { screenToFlowPosition } = useReactFlow()
 
-  const handleAddStack = () => {
-    const centerX = window.innerWidth / 2
-    const centerY = window.innerHeight / 2
-
+  const centerPosition = () => {
     const position = screenToFlowPosition({
-      x: centerX,
-      y: centerY,
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
     })
-
-    addServerStack({
-      x: position.x - 94,
-      y: position.y - 74,
-    })
+    return { x: position.x - 94, y: position.y - 74 }
   }
 
   return (
@@ -33,11 +28,31 @@ export function CanvasStructureBar() {
           type="button"
           variant="outline"
           size="sm"
-          onClick={handleAddStack}
+          onClick={() => addServerStack(centerPosition())}
           className="h-7 gap-1.5 border-panel-border bg-node px-2.5 text-[10px] text-node-fg hover:bg-node-header"
         >
           <Layers className="size-3.5 text-connector" />
           Server Stack
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => addSkillStack(centerPosition())}
+          className="h-7 gap-1.5 border-panel-border bg-node px-2.5 text-[10px] text-node-fg hover:bg-node-header"
+        >
+          <Sparkles className="size-3.5 text-connector" />
+          Skill Stack
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => addInterfaceStack(centerPosition())}
+          className="h-7 gap-1.5 border-panel-border bg-node px-2.5 text-[10px] text-node-fg hover:bg-node-header"
+        >
+          <Network className="size-3.5 text-connector" />
+          Interface Stack
         </Button>
       </div>
     </div>
