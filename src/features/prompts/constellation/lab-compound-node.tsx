@@ -5,26 +5,36 @@ import type { CompoundNodeData } from '@/lib/prompts/use-molecule-graph'
 import { cn } from '@/lib/utils'
 
 export function LabCompoundNode({ data }: NodeProps) {
-  const nodeData = data as CompoundNodeData
+  const nodeData = data as CompoundNodeData & { dragging?: boolean }
   const Icon = nodeData.kind === 'system-prompt' ? Layers : Minimize2
+  const dragging = Boolean(nodeData.dragging)
 
   return (
-    <div className="group/labcompound relative w-[200px]">
+    <div
+      className={cn(
+        'group/labcompound relative w-[200px] will-change-transform',
+        dragging && 'cursor-grabbing',
+      )}
+    >
       <Handle
         type="target"
         position={Position.Left}
-        className="!size-2.5 !border-interactive/50 !bg-interactive"
+        className="!pointer-events-none !size-2.5 !border-interactive/50 !bg-interactive !opacity-0"
       />
 
       <div
         className={cn(
-          'relative overflow-hidden rounded-[1.75rem] border-2 bg-node/80 shadow-xl backdrop-blur-sm transition-all duration-300',
+          'relative overflow-hidden rounded-[1.75rem] border-2 bg-node/80 shadow-xl backdrop-blur-sm',
+          // Colors/shadow only — never transform — so drag stays 1:1 with the cursor.
+          'transition-[border-color,box-shadow,background-color,filter] duration-200 ease-out',
           nodeData.selected
             ? 'border-interactive shadow-[0_0_0_4px_color-mix(in_oklch,var(--interactive)_20%,transparent),0_16px_40px_color-mix(in_oklch,var(--interactive)_12%,transparent)]'
             : 'border-panel-border hover:border-interactive/40',
           nodeData.highlighted &&
             !nodeData.selected &&
             'border-connector/50 shadow-[0_0_24px_color-mix(in_oklch,var(--connector)_15%,transparent)]',
+          dragging &&
+            'border-interactive/60 shadow-[0_22px_48px_color-mix(in_oklch,var(--interactive)_22%,transparent)] brightness-[1.03]',
         )}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-interactive/8 via-transparent to-connector/8" />
@@ -35,7 +45,9 @@ export function LabCompoundNode({ data }: NodeProps) {
               <Icon className="size-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-bold text-node-fg">{nodeData.name}</p>
+              <p className="truncate text-xs font-bold text-node-fg">
+                {nodeData.name}
+              </p>
               <p className="mt-0.5 line-clamp-2 text-[9px] leading-relaxed text-panel-muted">
                 {nodeData.preview || 'Empty compound'}
               </p>

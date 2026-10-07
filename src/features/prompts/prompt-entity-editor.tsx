@@ -3,6 +3,10 @@ import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  AtomMarkdownEditor,
+  type AtomEditorMode,
+} from '@/features/prompts/atom-markdown-editor'
 import { ComposedEditorWorkspace } from '@/features/prompts/composed-editor-workspace'
 import type { RichComposerHandle } from '@/features/prompts/rich-reference-composer'
 import {
@@ -78,6 +82,7 @@ export function PromptEntityEditor({
   const [name, setName] = useState('')
   const [content, setContent] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [atomMode, setAtomMode] = useState<AtomEditorMode>('split')
 
   const isLoading =
     (!isNew && kind === 'prompt' && promptLoading) ||
@@ -235,6 +240,20 @@ export function PromptEntityEditor({
     }
   }
 
+  const saveRef = useRef(handleSave)
+  saveRef.current = handleSave
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+        event.preventDefault()
+        void saveRef.current()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center text-panel-muted">
@@ -250,14 +269,14 @@ export function PromptEntityEditor({
     <div className="flex h-full min-h-0 flex-col">
       <div
         className={cn(
-          'shrink-0 border-b border-panel-border',
+          'shrink-0 border-b border-panel-border/80',
           embedded ? 'px-4 py-3' : 'bg-panel-inspector/40 px-6 py-5',
         )}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             {!embedded ? (
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-panel-muted">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-panel-muted">
                 {isNew ? `New ${kindLabel}` : kindLabel}
               </p>
             ) : null}
@@ -267,13 +286,16 @@ export function PromptEntityEditor({
               maxLength={50}
               placeholder={`${kindLabel} name`}
               className={cn(
-                'border-0 bg-transparent px-0 font-semibold shadow-none focus-visible:ring-0',
-                embedded ? 'h-8 text-base' : 'mt-2 h-10 text-xl',
+                'prompt-lab-serif border-0 bg-transparent px-0 font-semibold shadow-none focus-visible:ring-0',
+                embedded ? 'h-9 text-lg' : 'mt-2 h-11 text-2xl',
               )}
             />
             <p className="mt-0.5 text-[10px] text-panel-muted">
               {content.length} chars
-              {composed ? ` · ${refCount} bond${refCount === 1 ? '' : 's'}` : ''}
+              {composed
+                ? ` · ${refCount} bond${refCount === 1 ? '' : 's'}`
+                : ' · Markdown'}
+              <span className="ml-2 opacity-50">Ctrl+S to save</span>
             </p>
           </div>
 
@@ -284,9 +306,10 @@ export function PromptEntityEditor({
                 variant="outline"
                 size="sm"
                 onClick={() => composerRef.current?.insertAtSign()}
-                className="h-7 gap-1 px-2"
+                className="h-8 gap-1 px-2.5"
+                title="Insert @"
               >
-                <AtSign className="size-3" />
+                <AtSign className="size-3.5" />
               </Button>
             ) : null}
             <Button
@@ -294,9 +317,10 @@ export function PromptEntityEditor({
               variant="outline"
               size="sm"
               onClick={handleCopy}
-              className="h-7 px-2"
+              className="h-8 px-2.5"
+              title="Copy content"
             >
-              <Copy className="size-3" />
+              <Copy className="size-3.5" />
             </Button>
             {!isNew ? (
               <Button
@@ -304,9 +328,10 @@ export function PromptEntityEditor({
                 variant="outline"
                 size="sm"
                 onClick={handleDelete}
-                className="h-7 border-destructive/40 px-2 text-destructive hover:bg-destructive/10"
+                className="h-8 border-destructive/40 px-2.5 text-destructive hover:bg-destructive/10"
+                title="Delete"
               >
-                <Trash2 className="size-3" />
+                <Trash2 className="size-3.5" />
               </Button>
             ) : null}
             <Button
@@ -314,12 +339,12 @@ export function PromptEntityEditor({
               size="sm"
               onClick={handleSave}
               disabled={isSaving}
-              className="h-7 gap-1 bg-connector px-2.5 text-white hover:bg-connector/90"
+              className="h-8 gap-1.5 bg-connector px-3 text-white hover:bg-connector/90"
             >
               {isSaving ? (
-                <Loader2 className="size-3 animate-spin" />
+                <Loader2 className="size-3.5 animate-spin" />
               ) : (
-                <Save className="size-3" />
+                <Save className="size-3.5" />
               )}
               Save
             </Button>
@@ -336,20 +361,12 @@ export function PromptEntityEditor({
             composerRef={composerRef}
           />
         ) : (
-          <div className="flex h-full flex-col p-4">
-            <textarea
-              value={content}
-              onChange={(event) => updateContent(event.target.value)}
-              maxLength={3000}
-              placeholder="Write atom content — concise, reusable instructions or prompt text."
-              className={cn(
-                'min-h-0 flex-1 resize-none rounded-xl border border-panel-border bg-background px-4 py-3 text-sm leading-relaxed outline-none transition-colors focus:border-connector/60 focus:ring-2 focus:ring-connector/15',
-              )}
-            />
-            <p className="mt-2 text-right text-[10px] text-panel-muted">
-              {content.length} / 3000
-            </p>
-          </div>
+          <AtomMarkdownEditor
+            value={content}
+            onChange={updateContent}
+            mode={atomMode}
+            onModeChange={setAtomMode}
+          />
         )}
       </div>
     </div>

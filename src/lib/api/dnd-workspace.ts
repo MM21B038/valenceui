@@ -9,6 +9,7 @@ import type {
   DndConnection,
   DndConnectionCreatePayload,
   ServerStackEntity,
+  WorkspaceContainerResult,
   WorkspaceCreatePayload,
   WorkspaceDetail,
   WorkspaceListItem,
@@ -94,6 +95,42 @@ export function useDeleteWorkspace() {
     onSuccess: (_data, uuid) => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.all })
       queryClient.removeQueries({ queryKey: workspaceKeys.detail(uuid) })
+    },
+  })
+}
+
+/** POST /workspace/<uuid>/run/ */
+export function useRunWorkspace() {
+  return useMutation({
+    mutationFn: async (uuid: string) => {
+      const { data } = await apiClient.post<WorkspaceContainerResult>(
+        `/workspace/${uuid}/run/`,
+      )
+      return data
+    },
+  })
+}
+
+/** POST /workspace/<uuid>/stop/ */
+export function useStopWorkspace() {
+  return useMutation({
+    mutationFn: async (uuid: string) => {
+      const { data } = await apiClient.post<WorkspaceContainerResult>(
+        `/workspace/${uuid}/stop/`,
+      )
+      return data
+    },
+  })
+}
+
+/** POST /workspace/<uuid>/stop-remove/ */
+export function useStopRemoveWorkspace() {
+  return useMutation({
+    mutationFn: async (uuid: string) => {
+      const { data } = await apiClient.post<WorkspaceContainerResult>(
+        `/workspace/${uuid}/stop-remove/`,
+      )
+      return data
     },
   })
 }

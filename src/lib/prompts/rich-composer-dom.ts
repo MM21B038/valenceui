@@ -70,7 +70,10 @@ export function renderContentToEditor(
   nameLookup?: Map<string, ReferenceLookupEntry>,
 ) {
   root.innerHTML = ''
-  const segments = parseComposerContent(content, nameLookup, false)
+  const repaired = content
+    .replace(/\r\n/g, '\n')
+    .replace(/([^\n])(#{1,6}(?:\s|$))/g, '$1\n$2')
+  const segments = parseComposerContent(repaired, nameLookup, false)
 
   for (const segment of segments) {
     if (segment.type === 'text') {
@@ -104,15 +107,43 @@ function serializeNode(node: Node): string {
   if (element.tagName === 'BR') return '\n'
 
   if (element.tagName === 'DIV' || element.tagName === 'P') {
+    // Browser Enter often wraps the next line in a <div>. Serialize children
+    // without forcing an extra trailing newline here — block separation is
+    // handled in serializeEditorContent so we don't get "# h1## h2".
     const inner = Array.from(element.childNodes).map(serializeNode).join('')
-    return inner.endsWith('\n') ? inner : `${inner}\n`
+    // Empty block (Chrome: <div><br></div>) still counts as a line break.
+    if (inner === '' || inner === '\n') return '\n'
+    return inner
   }
 
   return Array.from(element.childNodes).map(serializeNode).join('')
 }
 
 export function serializeEditorContent(root: HTMLElement): string {
-  return Array.from(root.childNodes).map(serializeNode).join('')
+  const chunks: string[] = []
+
+  for (const node of Array.from(root.childNodes)) {
+    const isBlock =
+      node.nodeType === Node.ELEMENT_NODE &&
+      ((node as HTMLElement).tagName === 'DIV' ||
+        (node as HTMLElement).tagName === 'P')
+
+    const piece = serializeNode(node)
+    if (!piece && !isBlock) continue
+
+    if (isBlock && chunks.length > 0) {
+      const prev = chunks[chunks.length - 1] ?? ''
+      if (!prev.endsWith('\n')) chunks.push('\n')
+    }
+
+    chunks.push(piece)
+  }
+
+  // Avoid runaway trailing newlines from empty trailing blocks, keep doubles max.
+  return chunks
+    .join('')
+    .replace(/([^\n])(#{1,6}(?:\s|$))/g, '$1\n$2')
+    .replace(/\n{3,}/g, '\n\n')
 }
 
 export function serializeBeforeSelection(root: HTMLElement): string {

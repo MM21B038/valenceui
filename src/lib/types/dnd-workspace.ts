@@ -92,3 +92,15 @@ export interface AgentInterfaceStackEntity {
   uuid: string
   agent_interfaces: string[]
 }
+
+/** Response from workspace run / stop / stop-remove */
+export interface WorkspaceContainerResult {
+  network: string | null
+  containers: Array<{
+    uuid?: string | null
+    container_name?: string | null
+    status: string
+    image?: string | null
+    message?: string
+  }>
+}

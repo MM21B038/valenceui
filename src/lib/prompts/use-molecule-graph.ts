@@ -80,7 +80,7 @@ export function useMoleculeGraph(
             source: atomId,
             target: id,
             type: 'valenceBond',
-            animated: true,
+            animated: false,
             data: { highlighted },
           })
         }

@@ -10,7 +10,7 @@ import {
 import { usePaintMode } from '@/components/theme/paint-mode-provider'
 import { useTheme } from '@/components/theme/theme-provider'
 import { NodeHoverActions } from '@/features/canvas/nodes/node-hover-actions'
-import { NodePorts } from '@/features/canvas/nodes/node-ports'
+import { A2aExecutorPorts } from '@/features/canvas/nodes/a2a-executor-ports'
 import {
   FixedRolePorts,
   RoleBadge,
@@ -29,7 +29,7 @@ import { cn } from '@/lib/utils'
 /**
  * Agent Executor:
  * - agent-executor workspace → compass hub (LLM / Card / Thread / Server)
- * - a2a workspace → plain card + cardinal ports (no role badges)
+ * - a2a workspace → plain card + top-in / bottom-out ports (multi-connect)
  */
 export function AgentExecutorNode({ id, data, selected }: NodeProps) {
   const nodeData = data as AgentExecutorNodeData
@@ -61,7 +61,7 @@ export function AgentExecutorNode({ id, data, selected }: NodeProps) {
       <div className="group/node relative h-[88px] w-[200px]">
         <div className="absolute -inset-8 z-0" aria-hidden />
 
-        <NodePorts nodeId={id} />
+        <A2aExecutorPorts nodeId={id} />
 
         <NodeHoverActions
           onDuplicate={(event) => {
@@ -126,6 +126,9 @@ export function AgentExecutorNode({ id, data, selected }: NodeProps) {
                     style={{ color: componentVar('agentExecutor', 'muted') }}
                   >
                     {nodeData.host}:{nodeData.port}
+                    {nodeData.containerStatus
+                      ? ` · ${nodeData.containerStatus}`
+                      : ''}
                   </p>
                 ) : null}
               </>
@@ -224,6 +227,9 @@ export function AgentExecutorNode({ id, data, selected }: NodeProps) {
                   style={{ color: componentVar('agentExecutor', 'muted') }}
                 >
                   {nodeData.host}:{nodeData.port}
+                  {nodeData.containerStatus
+                    ? ` · ${nodeData.containerStatus}`
+                    : ''}
                 </p>
               ) : null}
             </>

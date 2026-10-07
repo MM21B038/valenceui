@@ -322,6 +322,7 @@ export function workspaceDetailToGraph(detail: WorkspaceDetail): {
         x: connection.target.position_x,
         y: connection.target.position_y,
       },
+      workspaceType: detail.type,
     })
 
     return {
