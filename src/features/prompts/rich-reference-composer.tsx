@@ -239,6 +239,16 @@ export const RichReferenceComposer = forwardRef<
       return
     }
 
+    // Force real newlines instead of Chrome's <div>-wrapped lines, which used
+    // to serialize as "# h1## h2" (missing \n between blocks).
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      insertPlainTextAtSelection(root, '\n')
+      emitChange()
+      updateMentionState()
+      return
+    }
+
     if (event.key === 'Escape' && mentionQuery !== null) {
       event.preventDefault()
       setMentionQuery(null)
@@ -271,7 +281,7 @@ export const RichReferenceComposer = forwardRef<
   return (
     <div className={cn('relative', className)}>
       {isEmpty ? (
-        <p className="pointer-events-none absolute top-4 left-4 text-sm text-panel-muted">
+        <p className="pointer-events-none absolute top-4 left-5 prompt-lab-serif text-[15px] text-panel-muted/80">
           {placeholder}
         </p>
       ) : null}
@@ -318,10 +328,10 @@ export const RichReferenceComposer = forwardRef<
         onClick={updateMentionState}
         onKeyUp={updateMentionState}
         className={cn(
-          'min-h-[360px] w-full rounded-xl border bg-background px-4 py-3 text-sm leading-relaxed text-foreground outline-none transition-colors focus:ring-2 focus:ring-connector/15',
+          'prompt-lab-serif min-h-[360px] w-full whitespace-pre-wrap break-words rounded-2xl border bg-background/80 px-5 py-4 text-[15px] leading-[1.7] text-foreground outline-none transition-all duration-200 focus:ring-2 focus:ring-connector/15',
           isDropActive && isOver
-            ? 'border-connector ring-2 ring-connector/20'
-            : 'border-panel-border focus:border-connector/60',
+            ? 'border-connector ring-2 ring-connector/20 shadow-[0_0_0_4px_color-mix(in_oklch,var(--connector)_12%,transparent)]'
+            : 'border-panel-border/80 focus:border-connector/60',
         )}
       />
 

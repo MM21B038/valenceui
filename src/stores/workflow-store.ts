@@ -427,6 +427,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         ? addEdge(
             {
               ...connection,
+              sourceHandle: connection.sourceHandle ?? 'port-out',
+              targetHandle: connection.targetHandle ?? 'port-in',
               type: 'valenceFlow',
               animated: false,
             },

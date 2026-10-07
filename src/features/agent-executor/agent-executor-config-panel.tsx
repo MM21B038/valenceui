@@ -16,8 +16,9 @@ import { useWorkflowStore } from '@/stores/workflow-store'
 
 /**
  * Agent Executor inspector:
- * - agent-executor workspace: unset → create form; set → edit form (no pick grid)
+ * - agent-executor workspace: unset → create form; set → edit form
  * - a2a workspace: rebind an existing executor onto the clicked node
+ * Lifecycle (run/stop/stop-remove) lives in the app shell header.
  */
 export function AgentExecutorConfigPanel() {
   const modalNodeId = useWorkflowStore(

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api/client'
 import type {
   AgentExecutor,
+  AgentExecutorContainer,
   AgentExecutorCreatePayload,
   AgentExecutorListItem,
 } from '@/lib/types/agent-executor'
@@ -92,6 +93,18 @@ export function useDeleteAgentExecutor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: agentExecutorKeys.all })
+    },
+  })
+}
+
+/** POST /agent-executor/image/build/ */
+export function useBuildAgentExecutorImage() {
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await apiClient.post<AgentExecutorContainer>(
+        '/agent-executor/image/build/',
+      )
+      return data
     },
   })
 }

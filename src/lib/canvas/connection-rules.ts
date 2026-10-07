@@ -10,6 +10,15 @@ export const NODE_PORT_SIDES = [
   { id: 'port-left', position: Position.Left },
 ] as const
 
+/**
+ * A2A Agent Executor — directed vertical flow.
+ * Top = in (target), Bottom = out (source). Multi-connect allowed.
+ */
+export const A2A_EXECUTOR_PORTS = [
+  { id: 'port-in', position: Position.Top, handleType: 'target' as const },
+  { id: 'port-out', position: Position.Bottom, handleType: 'source' as const },
+] as const
+
 /** Thread Config — Executor left, Server right. Never LLM. */
 export const THREAD_CONFIG_PORTS = [
   { id: 'port-agent', position: Position.Left, label: 'Executor' },
@@ -43,12 +52,14 @@ export const AGENT_CARD_PORTS = [
 ] as const
 
 export type CardinalPortHandleId = (typeof NODE_PORT_SIDES)[number]['id']
+export type A2aExecutorPortHandleId = (typeof A2A_EXECUTOR_PORTS)[number]['id']
 export type ThreadConfigPortHandleId = (typeof THREAD_CONFIG_PORTS)[number]['id']
 export type LlmPortHandleId = (typeof LLM_PORTS)[number]['id']
 export type AgentExecutorPortHandleId = (typeof AGENT_EXECUTOR_PORTS)[number]['id']
 export type AgentCardPortHandleId = (typeof AGENT_CARD_PORTS)[number]['id']
 export type PortHandleId =
   | CardinalPortHandleId
+  | A2aExecutorPortHandleId
   | ThreadConfigPortHandleId
   | LlmPortHandleId
   | AgentExecutorPortHandleId
@@ -186,14 +197,31 @@ export function inferCardinalHandle(
 /**
  * Reconstruct source/target handles for a persisted connection that only
  * stores node UUIDs (role ports from REQUIRED_PORT; cardinal from geometry).
+ * A2A executor↔executor always uses directed port-out → port-in.
  */
 export function resolveEdgeHandles(options: {
   sourceType: ValenceNodeType
   targetType: ValenceNodeType
   sourcePosition: { x: number; y: number }
   targetPosition: { x: number; y: number }
+  workspaceType?: 'agent-executor' | 'a2a'
 }): { sourceHandle: string; targetHandle: string } {
-  const { sourceType, targetType, sourcePosition, targetPosition } = options
+  const {
+    sourceType,
+    targetType,
+    sourcePosition,
+    targetPosition,
+    workspaceType = 'agent-executor',
+  } = options
+
+  if (
+    workspaceType === 'a2a' &&
+    sourceType === 'agentExecutor' &&
+    targetType === 'agentExecutor'
+  ) {
+    return { sourceHandle: 'port-out', targetHandle: 'port-in' }
+  }
+
   const sourceProfile = getNodeProfile(sourceType)
   const targetProfile = getNodeProfile(targetType)
 
@@ -429,11 +457,15 @@ export function isValidWorkflowConnection(
   const sourceType = sourceNode.type as ValenceNodeType
   const targetType = targetNode.type as ValenceNodeType
 
-  // A2A workspace — only Agent Executor ↔ Agent Executor
+  // A2A workspace — only Agent Executor ↔ Agent Executor (port-out → port-in)
   if (workspaceType === 'a2a') {
     if (sourceType !== 'agentExecutor' || targetType !== 'agentExecutor') {
       return false
     }
+    const sourceHandle = connection.sourceHandle
+    const targetHandle = connection.targetHandle
+    if (sourceHandle && sourceHandle !== 'port-out') return false
+    if (targetHandle && targetHandle !== 'port-in') return false
     return true
   }
 

@@ -5,12 +5,16 @@ import {
   MiniMap,
   ReactFlow,
   ReactFlowProvider,
+  applyNodeChanges,
+  useEdgesState,
+  useNodesState,
   type Node,
+  type NodeChange,
   type OnNodeDrag,
   useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { LabAtomNode } from '@/features/prompts/constellation/lab-atom-node'
 import { LabCompoundNode } from '@/features/prompts/constellation/lab-compound-node'
@@ -71,9 +75,11 @@ function ConstellationFlowInner({
   onBondAtomToCompound,
 }: PromptConstellationCanvasProps) {
   const { fitView, getNodes } = useReactFlow()
-  const [savedPositions, setSavedPositions] = useState<Map<string, MoleculePosition>>(
-    () => new Map(),
-  )
+  const [savedPositions, setSavedPositions] = useState<
+    Map<string, MoleculePosition>
+  >(() => new Map())
+  const draggingRef = useRef(false)
+  const fittedLengthRef = useRef(-1)
 
   const highlightedKeys = useMemo(() => {
     const keys = new Set<string>()
@@ -86,7 +92,12 @@ function ConstellationFlowInner({
 
     if (kind === 'prompt' || kind === 'skill') {
       for (const record of records) {
-        if (record.kind !== 'system-prompt' && record.kind !== 'compression-prompt') continue
+        if (
+          record.kind !== 'system-prompt' &&
+          record.kind !== 'compression-prompt'
+        ) {
+          continue
+        }
         const refs = usageIndex.compositionRefs.get(record.uuid) ?? []
         if (refs.some((ref) => ref.refType === kind && ref.uuid === uuid)) {
           keys.add(`${record.kind}:${record.uuid}`)
@@ -103,7 +114,7 @@ function ConstellationFlowInner({
     return keys
   }, [selectedKey, records, usageIndex])
 
-  const { nodes, edges } = useMoleculeGraph(
+  const { nodes: layoutNodes, edges: layoutEdges } = useMoleculeGraph(
     records,
     usageIndex,
     savedPositions,
@@ -111,16 +122,32 @@ function ConstellationFlowInner({
     highlightedKeys,
   )
 
+  const [nodes, setNodes] = useNodesState(layoutNodes)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges)
+
+  // Sync graph structure/data from layout, but never clobber mid-drag positions.
   useEffect(() => {
-    if (nodes.length === 0) return
+    if (draggingRef.current) return
+    setNodes(layoutNodes)
+    setEdges(layoutEdges)
+  }, [layoutNodes, layoutEdges, setNodes, setEdges])
+
+  useEffect(() => {
+    if (nodes.length === 0) {
+      fittedLengthRef.current = 0
+      return
+    }
+    if (nodes.length === fittedLengthRef.current) return
+    fittedLengthRef.current = nodes.length
     const timer = window.setTimeout(() => {
-      fitView({ padding: 0.2, duration: 400 })
-    }, 80)
+      if (draggingRef.current) return
+      fitView({ padding: 0.22, duration: 350 })
+    }, 60)
     return () => window.clearTimeout(timer)
   }, [nodes.length, fitView])
 
   useEffect(() => {
-    if (!selectedKey || nodes.length === 0) return
+    if (!selectedKey || nodes.length === 0 || draggingRef.current) return
     const colonIndex = selectedKey.indexOf(':')
     if (colonIndex === -1) return
     const kind = selectedKey.slice(0, colonIndex) as EntityKind
@@ -129,11 +156,23 @@ function ConstellationFlowInner({
     const node = nodes.find((entry) => entry.id === nodeId)
     if (!node) return
 
-    fitView({ nodes: [node], padding: 0.85, duration: 500, maxZoom: 1.25 })
-  }, [selectedKey, nodes, fitView])
+    const timer = window.setTimeout(() => {
+      if (draggingRef.current) return
+      fitView({ nodes: [node], padding: 0.85, duration: 420, maxZoom: 1.2 })
+    }, 40)
+    return () => window.clearTimeout(timer)
+  }, [selectedKey, fitView]) // intentionally not depending on nodes — avoid camera fight while dragging
+
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      setNodes((current) => applyNodeChanges(changes, current))
+    },
+    [setNodes],
+  )
 
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
+      if (draggingRef.current) return
       const parsed = parseMoleculeNodeId(node.id)
       if (!parsed) return
       onSelect(parsed.kind, parsed.uuid)
@@ -141,20 +180,51 @@ function ConstellationFlowInner({
     [onSelect],
   )
 
+  const handleNodeDragStart: OnNodeDrag = useCallback((_event, node) => {
+    draggingRef.current = true
+    setNodes((current) =>
+      current.map((entry) =>
+        entry.id === node.id
+          ? {
+              ...entry,
+              data: { ...entry.data, dragging: true },
+              zIndex: 1000,
+            }
+          : entry,
+      ),
+    )
+  }, [setNodes])
+
   const handleNodeDragStop: OnNodeDrag = useCallback(
     (_event, node) => {
+      draggingRef.current = false
+
       setSavedPositions((previous) => {
         const next = new Map(previous)
         next.set(node.id, node.position)
         return next
       })
 
+      setNodes((current) =>
+        current.map((entry) =>
+          entry.id === node.id
+            ? {
+                ...entry,
+                data: { ...entry.data, dragging: false },
+                zIndex: undefined,
+              }
+            : entry,
+        ),
+      )
+
       if (!node.id.startsWith('atom:')) return
 
       const parsed = parseMoleculeNodeId(node.id)
       if (!parsed || (parsed.kind !== 'prompt' && parsed.kind !== 'skill')) return
 
-      const compounds = getNodes().filter((entry) => entry.id.startsWith('compound:'))
+      const compounds = getNodes().filter((entry) =>
+        entry.id.startsWith('compound:'),
+      )
       for (const compound of compounds) {
         if (!nodesOverlap(node, compound)) continue
         const compoundParsed = parseMoleculeNodeId(compound.id)
@@ -175,7 +245,7 @@ function ConstellationFlowInner({
         return
       }
     },
-    [getNodes, onBondAtomToCompound],
+    [getNodes, onBondAtomToCompound, setNodes],
   )
 
   const isEmpty = records.length === 0
@@ -187,17 +257,26 @@ function ConstellationFlowInner({
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
+        onNodeDragStart={handleNodeDragStart}
         onNodeDragStop={handleNodeDragStop}
         nodesConnectable={false}
         elementsSelectable
+        selectNodesOnDrag={false}
+        panOnDrag={[1, 2]}
+        selectionOnDrag={false}
+        nodeDragThreshold={1}
         panOnScroll
         zoomOnScroll
+        zoomOnDoubleClick={false}
         minZoom={0.35}
         maxZoom={1.8}
         proOptions={{ hideAttribution: true }}
         className="bg-transparent"
         defaultEdgeOptions={{ type: 'valenceBond' }}
+        elevateNodesOnSelect
       >
         <Background
           variant={BackgroundVariant.Dots}
@@ -205,13 +284,18 @@ function ConstellationFlowInner({
           size={1}
           color="var(--workspace-dot)"
         />
-        <Controls showInteractive={false} className="!border-panel-border !bg-node/90" />
+        <Controls
+          showInteractive={false}
+          className="!border-panel-border !bg-node/90"
+        />
         <MiniMap
           pannable
           zoomable
           className="!border-panel-border !bg-node/90"
           nodeColor={(node) =>
-            node.type === 'labCompound' ? 'var(--interactive)' : 'var(--connector)'
+            node.type === 'labCompound'
+              ? 'var(--interactive)'
+              : 'var(--connector)'
           }
         />
       </ReactFlow>

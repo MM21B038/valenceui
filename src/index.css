@@ -506,3 +506,43 @@
 .paint-mode-active [data-paint-target='toolServer'].paint-drop-target .node-shape-hex:first-child {
   filter: drop-shadow(0 0 10px color-mix(in oklch, var(--connector) 70%, transparent));
 }
+
+/* ── Prompt Lab typography ───────────────────────────────── */
+.prompt-lab-serif {
+  font-family: 'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  font-optical-sizing: auto;
+}
+
+.prompt-lab-mono {
+  font-family: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, monospace;
+}
+
+.prompt-lab-ambient {
+  background:
+    radial-gradient(ellipse 80% 50% at 12% -10%, color-mix(in oklch, var(--connector) 18%, transparent), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 88% 0%, color-mix(in oklch, var(--interactive) 14%, transparent), transparent 50%),
+    var(--workspace);
+}
+
+@keyframes prompt-lab-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+.prompt-lab-title-sheen {
+  background-image: linear-gradient(
+    105deg,
+    var(--chrome-fg) 0%,
+    color-mix(in oklch, var(--chrome-fg) 70%, white) 40%,
+    var(--chrome-fg) 80%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: prompt-lab-shimmer 8s ease-in-out infinite alternate;
+}

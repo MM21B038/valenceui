@@ -1,4 +1,4 @@
-import { ArrowLeft, FlaskConical, Search } from 'lucide-react'
+import { ArrowLeft, FlaskConical, Search, Sparkles } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -77,6 +77,19 @@ export function PromptLibraryLayout({
   const focusOpen = isCreating || Boolean(selectedId)
   const emptyIndex = useMemo(() => buildReferenceUsageIndex([]), [])
 
+  const atomCount = useMemo(
+    () =>
+      records.filter((r) => r.kind === 'prompt' || r.kind === 'skill').length,
+    [records],
+  )
+  const compoundCount = useMemo(
+    () =>
+      records.filter(
+        (r) => r.kind === 'system-prompt' || r.kind === 'compression-prompt',
+      ).length,
+    [records],
+  )
+
   const handleNavigate = useCallback(
     (entityKind: EntityKind, uuid: string) => {
       onSelectKind(entityKind)
@@ -129,49 +142,56 @@ export function PromptLibraryLayout({
   useCommandPaletteShortcut(openPalette)
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col bg-workspace">
+    <div className="prompt-lab-ambient relative flex h-full min-h-0 flex-col">
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 p-4">
-        <div className="pointer-events-auto flex items-center gap-2 rounded-2xl border border-panel-border/80 bg-chrome/90 px-3 py-2 text-chrome-fg shadow-xl backdrop-blur-md">
+        <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-panel-border/70 bg-chrome/90 px-3.5 py-2.5 text-chrome-fg shadow-xl backdrop-blur-md animate-in fade-in-0 slide-in-from-top-2 duration-500">
           <Button
             variant="outline"
             size="sm"
-            className="h-7 border-chrome-fg/25 bg-transparent px-2 text-chrome-fg hover:bg-interactive hover:text-interactive-fg"
+            className="h-8 border-chrome-fg/25 bg-transparent px-2.5 text-chrome-fg hover:bg-interactive hover:text-interactive-fg"
             asChild
           >
-            <Link to="/editor">
+            <Link to="/editor" title="Back to editor">
               <ArrowLeft className="size-3.5" />
             </Link>
           </Button>
-          <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-chrome-fg/10">
-              <FlaskConical className="size-3.5" />
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex size-9 items-center justify-center rounded-xl bg-chrome-fg/10">
+              <FlaskConical className="size-4" />
+              <Sparkles className="absolute -top-1 -right-1 size-3 text-chrome-fg/70" />
             </div>
             <div>
-              <p className="text-xs font-semibold leading-none">Valence Lab</p>
-              <p className="text-[9px] text-chrome-muted">Constellation</p>
+              <p className="prompt-lab-title-sheen text-sm font-semibold leading-none tracking-tight">
+                Valence Lab
+              </p>
+              <p className="mt-1 text-[10px] text-chrome-muted">
+                Prompt constellation · {atomCount} atoms · {compoundCount}{' '}
+                compounds
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="pointer-events-auto flex items-center gap-2 rounded-2xl border border-panel-border/80 bg-chrome/90 px-2 py-2 shadow-xl backdrop-blur-md">
+        <div className="pointer-events-auto flex items-center gap-2 rounded-2xl border border-panel-border/70 bg-chrome/90 px-2.5 py-2 shadow-xl backdrop-blur-md animate-in fade-in-0 slide-in-from-top-2 duration-500">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => setPaletteOpen(true)}
-            className="h-7 border-chrome-fg/25 bg-transparent text-chrome-fg hover:bg-interactive hover:text-interactive-fg"
+            className="h-8 border-chrome-fg/25 bg-transparent text-chrome-fg hover:bg-interactive hover:text-interactive-fg"
           >
             <Search className="size-3.5" />
-            <span className="hidden sm:inline">Ctrl+K</span>
+            <span className="hidden sm:inline">Find</span>
+            <kbd className="ml-1 hidden rounded border border-chrome-fg/20 px-1 py-px text-[9px] opacity-70 sm:inline">
+              ⌘K
+            </kbd>
           </Button>
           <PromptCreateMenu onCreate={onCreate} />
           <ThemeToggle />
         </div>
       </div>
 
-      <div
-        className="min-h-0 flex-1 [background-image:radial-gradient(circle_at_1px_1px,var(--workspace-dot)_1px,transparent_0)] [background-size:24px_24px]"
-      >
+      <div className="min-h-0 flex-1 [background-image:radial-gradient(circle_at_1px_1px,var(--workspace-dot)_1px,transparent_0)] [background-size:22px_22px]">
         <PromptConstellationCanvas
           records={records}
           usageIndex={usageIndex ?? emptyIndex}

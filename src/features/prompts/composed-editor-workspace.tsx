@@ -90,7 +90,15 @@ export function ComposedEditorWorkspace({
       onDragEnd={handleDragEnd}
     >
       <div className="flex h-full min-h-0 flex-col">
-        <div className="min-h-0 flex-1 overflow-y-auto p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="rounded-full bg-interactive/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-interactive">
+              Composer
+            </span>
+            <span className="text-[10px] text-panel-muted">
+              Type @ to bond · drag atoms from the shelf
+            </span>
+          </div>
           <RichReferenceComposer
             ref={composerRef}
             value={content}
