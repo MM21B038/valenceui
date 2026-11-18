@@ -23,8 +23,55 @@ import {
   componentIconGradientStyle,
   componentVar,
 } from '@/lib/theme/component-block-styles'
+import {
+  CONTAINER_LAMP_CLASS,
+  containerStatusLabel,
+  containerStatusTone,
+} from '@/lib/workspace/runtime-status'
 import { useWorkflowStore } from '@/stores/workflow-store'
 import { cn } from '@/lib/utils'
+
+function ContainerStatusRow({
+  host,
+  port,
+  containerStatus,
+  className,
+}: {
+  host: string
+  port: number
+  containerStatus?: string | null
+  className?: string
+}) {
+  const label = containerStatusLabel(containerStatus)
+  const tone = containerStatusTone(containerStatus)
+
+  return (
+    <p
+      className={cn(
+        'flex min-w-0 items-center gap-1 truncate',
+        className,
+      )}
+      style={{ color: componentVar('agentExecutor', 'muted') }}
+    >
+      <span className="truncate">
+        {host}:{port}
+      </span>
+      {label ? (
+        <span className="inline-flex shrink-0 items-center gap-1">
+          <span
+            className={cn(
+              'size-1.5 rounded-full',
+              CONTAINER_LAMP_CLASS[tone],
+              tone === 'running' && 'animate-pulse',
+            )}
+            aria-hidden
+          />
+          <span className="truncate">{label}</span>
+        </span>
+      ) : null}
+    </p>
+  )
+}
 
 /**
  * Agent Executor:
@@ -121,15 +168,12 @@ export function AgentExecutorNode({ id, data, selected }: NodeProps) {
                   {nodeData.name}
                 </p>
                 {nodeData.host && nodeData.port ? (
-                  <p
-                    className="truncate text-[9px]"
-                    style={{ color: componentVar('agentExecutor', 'muted') }}
-                  >
-                    {nodeData.host}:{nodeData.port}
-                    {nodeData.containerStatus
-                      ? ` · ${nodeData.containerStatus}`
-                      : ''}
-                  </p>
+                  <ContainerStatusRow
+                    host={nodeData.host}
+                    port={nodeData.port}
+                    containerStatus={nodeData.containerStatus}
+                    className="text-[9px]"
+                  />
                 ) : null}
               </>
             ) : (
@@ -222,15 +266,12 @@ export function AgentExecutorNode({ id, data, selected }: NodeProps) {
                 {nodeData.name}
               </p>
               {nodeData.host && nodeData.port ? (
-                <p
-                  className="w-full truncate text-[8px]"
-                  style={{ color: componentVar('agentExecutor', 'muted') }}
-                >
-                  {nodeData.host}:{nodeData.port}
-                  {nodeData.containerStatus
-                    ? ` · ${nodeData.containerStatus}`
-                    : ''}
-                </p>
+                <ContainerStatusRow
+                  host={nodeData.host}
+                  port={nodeData.port}
+                  containerStatus={nodeData.containerStatus}
+                  className="w-full justify-center text-[8px]"
+                />
               ) : null}
             </>
           ) : (

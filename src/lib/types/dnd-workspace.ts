@@ -104,3 +104,60 @@ export interface WorkspaceContainerResult {
     message?: string
   }>
 }
+
+/** Aggregate Docker state for a workspace */
+export type WorkspaceAggregateState =
+  | 'not_started'
+  | 'running'
+  | 'partial'
+  | 'stopped'
+
+export interface WorkspaceNetworkStatus {
+  name: string
+  exists: boolean
+}
+
+export interface WorkspaceExecutorStatus {
+  agent_executor_uuid: string
+  name: string | null
+  host: string | null
+  port: number | null
+  container_name: string | null
+  /** Docker status or "not_found" */
+  container_status: string
+  image: string | null
+  connected_to?: string[]
+}
+
+/** GET /workspace/<uuid>/status/ */
+export interface WorkspaceStatusResponse {
+  workspace_uuid: string
+  workspace_name: string
+  workspace_type: WorkspaceType
+  state: WorkspaceAggregateState
+  network: WorkspaceNetworkStatus | null
+  executors: WorkspaceExecutorStatus[]
+}
+
+export interface ProcessContainerSummary {
+  agent_executor_uuid: string
+  name: string | null
+  container_status: string
+  container_name: string | null
+  port: number | null
+}
+
+export interface ProcessWorkspaceSummary {
+  workspace_uuid: string
+  workspace_name: string
+  workspace_type: WorkspaceType
+  state: WorkspaceAggregateState
+  running_count: number
+  expected_count: number
+  containers: ProcessContainerSummary[]
+}
+
+/** GET /processes/ */
+export interface ProcessListResponse {
+  processes: ProcessWorkspaceSummary[]
+}
