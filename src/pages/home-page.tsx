@@ -1,5 +1,5 @@
 import { ArrowRight, Bot, Network, Trash2, Workflow, X } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { useTheme } from '@/components/theme/theme-provider'
@@ -11,10 +11,15 @@ import { Label } from '@/components/ui/label'
 import {
   useCreateWorkspace,
   useDeleteWorkspace,
+  useWorkspaceProcesses,
   useWorkspaces,
 } from '@/lib/api/dnd-workspace'
 import { colorRoles, resolvePalette } from '@/lib/theme/brand'
 import type { WorkspaceType } from '@/lib/types/dnd-workspace'
+import {
+  aggregateStateLabel,
+} from '@/lib/workspace/runtime-status'
+import { cn } from '@/lib/utils'
 import { useWorkflowStore } from '@/stores/workflow-store'
 
 const rolePreview = [
@@ -32,6 +37,17 @@ export function HomePage() {
   const deleteWorkspace = useDeleteWorkspace()
   const resetWorkspace = useWorkflowStore((state) => state.resetWorkspace)
   const { data: workspaces = [] } = useWorkspaces()
+  const { data: processList } = useWorkspaceProcesses()
+  const processByUuid = useMemo(() => {
+    const map = new Map<
+      string,
+      NonNullable<typeof processList>['processes'][number]
+    >()
+    for (const process of processList?.processes ?? []) {
+      map.set(process.workspace_uuid, process)
+    }
+    return map
+  }, [processList])
   const [pendingType, setPendingType] = useState<WorkspaceType | null>(null)
   const [nameDraft, setNameDraft] = useState('')
   const [creating, setCreating] = useState(false)
@@ -211,38 +227,71 @@ export function HomePage() {
               Recent workspaces
             </p>
             <div className="flex flex-wrap gap-2">
-              {workspaces.map((workspace) => (
-                <div
-                  key={workspace.uuid}
-                  className="group inline-flex items-center gap-0.5 rounded-lg border border-border bg-background pr-0.5"
-                >
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 rounded-md px-2.5"
-                    asChild
+              {workspaces.map((workspace) => {
+                const process = processByUuid.get(workspace.uuid)
+                return (
+                  <div
+                    key={workspace.uuid}
+                    className="group inline-flex items-center gap-0.5 rounded-lg border border-border bg-background pr-0.5"
                   >
-                    <Link to={`/editor/${workspace.uuid}`}>
-                      {workspace.name}
-                      <span className="ml-1.5 text-[10px] text-muted-foreground">
-                        {workspace.type}
-                      </span>
-                    </Link>
-                  </Button>
-                  <button
-                    type="button"
-                    title={`Delete ${workspace.name}`}
-                    aria-label={`Delete ${workspace.name}`}
-                    disabled={deletingId === workspace.uuid}
-                    onClick={() =>
-                      void handleDelete(workspace.uuid, workspace.name)
-                    }
-                    className="flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-60 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 disabled:opacity-40"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
-                </div>
-              ))}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 rounded-md px-2.5"
+                      asChild
+                    >
+                      <Link to={`/editor/${workspace.uuid}`}>
+                        {workspace.name}
+                        <span className="ml-1.5 text-[10px] text-muted-foreground">
+                          {workspace.type === 'a2a' ? 'A2A' : 'Executor'}
+                        </span>
+                        {process ? (
+                          <span
+                            className={cn(
+                              'ml-1.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium',
+                              process.state === 'running' &&
+                                'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+                              process.state === 'partial' &&
+                                'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+                              (process.state === 'stopped' ||
+                                process.state === 'not_started') &&
+                                'bg-muted text-muted-foreground',
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                'size-1.5 rounded-full',
+                                process.state === 'running' && 'bg-emerald-500',
+                                process.state === 'partial' && 'bg-amber-500',
+                                (process.state === 'stopped' ||
+                                  process.state === 'not_started') &&
+                                  'bg-muted-foreground/60',
+                              )}
+                              aria-hidden
+                            />
+                            {aggregateStateLabel(process.state)}
+                            {process.expected_count > 0
+                              ? ` ${process.running_count}/${process.expected_count}`
+                              : null}
+                          </span>
+                        ) : null}
+                      </Link>
+                    </Button>
+                    <button
+                      type="button"
+                      title={`Delete ${workspace.name}`}
+                      aria-label={`Delete ${workspace.name}`}
+                      disabled={deletingId === workspace.uuid}
+                      onClick={() =>
+                        void handleDelete(workspace.uuid, workspace.name)
+                      }
+                      className="flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-60 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 disabled:opacity-40"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  </div>
+                )
+              })}
             </div>
           </div>
         ) : null}

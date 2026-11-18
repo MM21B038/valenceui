@@ -8,11 +8,13 @@ import type {
   DndComponentCreatePayload,
   DndConnection,
   DndConnectionCreatePayload,
+  ProcessListResponse,
   ServerStackEntity,
   WorkspaceContainerResult,
   WorkspaceCreatePayload,
   WorkspaceDetail,
   WorkspaceListItem,
+  WorkspaceStatusResponse,
   WorkspaceType,
   WorkspaceUpdatePayload,
 } from '@/lib/types/dnd-workspace'
@@ -21,6 +23,16 @@ export const workspaceKeys = {
   all: ['workspace'] as const,
   list: (type?: WorkspaceType) => ['workspace', 'list', type ?? 'all'] as const,
   detail: (uuid: string) => ['workspace', uuid] as const,
+  status: (uuid: string) => ['workspace', uuid, 'status'] as const,
+  processes: ['workspace', 'processes'] as const,
+}
+
+function invalidateLifecycleQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  uuid: string,
+) {
+  void queryClient.invalidateQueries({ queryKey: workspaceKeys.status(uuid) })
+  void queryClient.invalidateQueries({ queryKey: workspaceKeys.processes })
 }
 
 export function useWorkspaces(type?: WorkspaceType) {
@@ -95,12 +107,44 @@ export function useDeleteWorkspace() {
     onSuccess: (_data, uuid) => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.all })
       queryClient.removeQueries({ queryKey: workspaceKeys.detail(uuid) })
+      queryClient.removeQueries({ queryKey: workspaceKeys.status(uuid) })
+      void queryClient.invalidateQueries({ queryKey: workspaceKeys.processes })
     },
+  })
+}
+
+/** GET /workspace/<uuid>/status/ — live Docker status (polls while tab visible). */
+export function useWorkspaceStatus(uuid: string, enabled = true) {
+  return useQuery({
+    queryKey: workspaceKeys.status(uuid),
+    queryFn: async () => {
+      const { data } = await apiClient.get<WorkspaceStatusResponse>(
+        `/workspace/${uuid}/status/`,
+      )
+      return data
+    },
+    enabled: enabled && Boolean(uuid) && uuid !== 'local-draft',
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+  })
+}
+
+/** GET /processes/ — all workspaces with aggregate runtime state. */
+export function useWorkspaceProcesses() {
+  return useQuery({
+    queryKey: workspaceKeys.processes,
+    queryFn: async () => {
+      const { data } = await apiClient.get<ProcessListResponse>('/processes/')
+      return data
+    },
+    refetchOnWindowFocus: true,
   })
 }
 
 /** POST /workspace/<uuid>/run/ */
 export function useRunWorkspace() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (uuid: string) => {
       const { data } = await apiClient.post<WorkspaceContainerResult>(
@@ -108,11 +152,15 @@ export function useRunWorkspace() {
       )
       return data
     },
+    onSuccess: (_data, uuid) => {
+      invalidateLifecycleQueries(queryClient, uuid)
+    },
   })
 }
 
 /** POST /workspace/<uuid>/stop/ */
 export function useStopWorkspace() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (uuid: string) => {
       const { data } = await apiClient.post<WorkspaceContainerResult>(
@@ -120,17 +168,24 @@ export function useStopWorkspace() {
       )
       return data
     },
+    onSuccess: (_data, uuid) => {
+      invalidateLifecycleQueries(queryClient, uuid)
+    },
   })
 }
 
 /** POST /workspace/<uuid>/stop-remove/ */
 export function useStopRemoveWorkspace() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (uuid: string) => {
       const { data } = await apiClient.post<WorkspaceContainerResult>(
         `/workspace/${uuid}/stop-remove/`,
       )
       return data
+    },
+    onSuccess: (_data, uuid) => {
+      invalidateLifecycleQueries(queryClient, uuid)
     },
   })
 }

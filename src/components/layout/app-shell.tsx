@@ -14,9 +14,16 @@ import {
   useStopRemoveWorkspace,
   useStopWorkspace,
   useUpdateWorkspace,
+  useWorkspaceStatus,
 } from '@/lib/api/dnd-workspace'
 import type { WorkspaceContainerResult } from '@/lib/types/dnd-workspace'
 import { useWorkspaceAutosave } from '@/lib/canvas/use-workspace-autosave'
+import {
+  aggregateStateChipClass,
+  aggregateStateDotClass,
+  aggregateStateLabel,
+  displayStatusFromExecutor,
+} from '@/lib/workspace/runtime-status'
 import { cn } from '@/lib/utils'
 import { useWorkflowStore } from '@/stores/workflow-store'
 
@@ -69,6 +76,7 @@ export function AppShell({ children }: AppShellProps) {
   const isPersisted = workflowId !== 'local-draft'
   const updateWorkspace = useUpdateWorkspace()
   const deleteWorkspace = useDeleteWorkspace()
+  const { data: workspaceStatus } = useWorkspaceStatus(workflowId, isPersisted)
   const {
     saving,
     saveError: graphSaveError,
@@ -89,6 +97,23 @@ export function AppShell({ children }: AppShellProps) {
   useEffect(() => {
     if (!editingName) setNameDraft(workflowName)
   }, [workflowName, editingName])
+
+  useEffect(() => {
+    if (!workspaceStatus?.executors) return
+    const currentNodes = useWorkflowStore.getState().nodes
+    const update = useWorkflowStore.getState().updateAgentExecutorNode
+    for (const executor of workspaceStatus.executors) {
+      const node = currentNodes.find(
+        (item) =>
+          item.type === 'agentExecutor' &&
+          String(item.data.configId) === executor.agent_executor_uuid,
+      )
+      if (!node) continue
+      const next = displayStatusFromExecutor(executor)
+      if (node.data.containerStatus === next) continue
+      update(node.id, { containerStatus: next })
+    }
+  }, [workspaceStatus])
 
   const applyContainerStatuses = (result: WorkspaceContainerResult) => {
     for (const container of result.containers) {
@@ -273,6 +298,34 @@ export function AppShell({ children }: AppShellProps) {
             >
               {workspaceType === 'a2a' ? 'A2A' : 'Executor'}
             </Badge>
+            {isPersisted && workspaceStatus ? (
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium',
+                  aggregateStateChipClass(workspaceStatus.state),
+                )}
+                title={
+                  workspaceStatus.network && !workspaceStatus.network.exists
+                    ? 'A2A Docker network missing'
+                    : aggregateStateLabel(workspaceStatus.state)
+                }
+              >
+                <span
+                  className={aggregateStateDotClass(workspaceStatus.state)}
+                  aria-hidden
+                />
+                {aggregateStateLabel(workspaceStatus.state)}
+              </span>
+            ) : null}
+            {isPersisted &&
+            workspaceStatus?.network &&
+            !workspaceStatus.network.exists &&
+            (workspaceStatus.state === 'running' ||
+              workspaceStatus.state === 'partial') ? (
+              <span className="text-[10px] text-chrome-muted">
+                network missing
+              </span>
+            ) : null}
             {!isPersisted ? (
               <Badge
                 variant="outline"
@@ -405,7 +458,8 @@ export function AppShell({ children }: AppShellProps) {
           </Button>
           <Button
             size="sm"
-            className="bg-connector text-node-fg hover:bg-connector/90"
+            variant="outline"
+            className="border-chrome-fg/25 bg-transparent text-chrome-fg hover:bg-interactive hover:text-interactive-fg"
             onClick={() => void handleRun()}
             disabled={
               lifecycleDisabled || configuredExecutors.length === 0
